@@ -2,4 +2,9 @@
     <string name="app_name">NMedia</string>
     <string name="nmedia">NMedia !</string>
     <string name="my_icon" translatable="false">my_icon</string>
+    <string name="iconn" translatable="false">iconN</string>
+    <string name="menu" translatable="false">menu</string>
+    <string name="likesdescr" translatable="false">likesdescr</string>
+    <string name="sharedescr" translatable="false">sharedescr</string>
+    <string name="lookdescr" translatable="false">lookdescr</string>
 </resources>
