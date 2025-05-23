@@ -7,7 +7,7 @@
     <string name="likesdescr" translatable="false">likesdescr</string>
     <string name="sharedescr" translatable="false">sharedescr</string>
     <string name="lookdescr" translatable="false">lookdescr</string>
-    <string name="zero_likes">0</string>
-    <string name="zero_share">0</string>
-    <string name="zero_look">0</string>
+    <string name="zero_likes" translatable="false">0</string>
+    <string name="zero_share" translatable="false">0</string>
+    <string name="zero_look" translatable="false">0</string>
 </resources>
