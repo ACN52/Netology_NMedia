@@ -105,28 +105,61 @@
         app:layout_constraintTop_toBottomOf="@+id/textView"
         app:srcCompat="@drawable/baseline_favorite_24" />
 
+    <TextView
+        android:id="@+id/textCountLikes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_16dp"
+
+        android:text="@string/zero_likes"
+        app:layout_constraintBottom_toBottomOf="@+id/imageHeart"
+        app:layout_constraintStart_toEndOf="@+id/imageHeart"
+        app:layout_constraintTop_toTopOf="@+id/imageHeart" />
+
     <ImageView
         android:id="@+id/imageShare"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="80dp"
 
+        android:layout_marginStart="96dp"
         android:contentDescription="@string/sharedescr"
-        app:layout_constraintBottom_toBottomOf="@+id/imageHeart"
-        app:layout_constraintStart_toEndOf="@+id/imageHeart"
-        app:layout_constraintTop_toTopOf="@+id/imageHeart"
+        app:layout_constraintBottom_toBottomOf="@+id/textCountLikes"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textCountLikes"
         app:srcCompat="@drawable/baseline_share_24" />
+
+    <TextView
+        android:id="@+id/textCountShare"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_16dp"
+
+        android:text="@string/zero_share"
+        app:layout_constraintBottom_toBottomOf="@+id/imageShare"
+        app:layout_constraintStart_toEndOf="@+id/imageShare"
+        app:layout_constraintTop_toTopOf="@+id/imageShare" />
 
     <ImageView
         android:id="@+id/imageLook"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="80dp"
+        android:layout_marginEnd="60dp"
 
         android:contentDescription="@string/lookdescr"
-        app:layout_constraintBottom_toBottomOf="@+id/imageShare"
+        app:layout_constraintBottom_toBottomOf="@+id/textCountShare"
+        app:layout_constraintTop_toTopOf="@+id/textCountShare"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/imageShare"
-        app:srcCompat="@drawable/baseline_visibility_24" />
+        app:srcCompat="@drawable/baseline_visibility_24"  />
+
+    <TextView
+        android:id="@+id/textCountLook"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_16dp"
+
+        android:text="@string/zero_look"
+        app:layout_constraintBottom_toBottomOf="@+id/imageLook"
+        app:layout_constraintStart_toEndOf="@+id/imageLook"
+        app:layout_constraintTop_toTopOf="@+id/imageLook" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
