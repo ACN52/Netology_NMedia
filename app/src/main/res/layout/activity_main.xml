@@ -6,6 +6,7 @@
     android:padding="@dimen/spacing_16dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
     <ImageView
@@ -18,7 +19,7 @@
         app:srcCompat="@drawable/netology" />
 
     <TextView
-        android:id="@+id/author"
+        android:id="@+id/textAuthor"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
 
@@ -33,7 +34,7 @@
         tools:text="@sample/posts.json/data/author"/>
 
     <TextView
-        android:id="@+id/published"
+        android:id="@+id/textPublished"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
@@ -41,7 +42,7 @@
 
         app:layout_constraintBottom_toBottomOf="@+id/iconNetology"
         app:layout_constraintStart_toEndOf="@+id/iconNetology"
-        app:layout_constraintTop_toBottomOf="@+id/author"
+        app:layout_constraintTop_toBottomOf="@+id/textAuthor"
         tools:text="@sample/posts.json/data/published" />
 
     <androidx.constraintlayout.widget.Barrier
@@ -49,7 +50,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="bottom"
-        app:constraint_referenced_ids="iconNetology, published, iconMenu"/>
+        app:constraint_referenced_ids="iconNetology, textPublished, iconMenu"/>
 
     <ImageView
         android:id="@+id/iconMenu"
@@ -57,9 +58,9 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/spacing_16dp"
         android:contentDescription="@string/menu"
-        app:layout_constraintBottom_toBottomOf="@+id/author"
+        app:layout_constraintBottom_toBottomOf="@+id/textAuthor"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/author"
+        app:layout_constraintTop_toTopOf="@+id/textAuthor"
         app:srcCompat="@drawable/baseline_more_vert_24" />
 
     <TextView
@@ -81,7 +82,7 @@
         app:layout_constraintTop_toBottomOf="@id/barrierOne" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/textContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
 
@@ -102,7 +103,7 @@
         android:layout_marginTop="16dp"
         android:contentDescription="@string/likesdescr"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintTop_toBottomOf="@+id/textContent"
         app:srcCompat="@drawable/baseline_favorite_24" />
 
     <TextView
