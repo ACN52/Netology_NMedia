@@ -9,6 +9,11 @@ import ru.netology.nmedia.dto.Post
 
 
 class PostRepositoryInMemoryImpl: PostRepository {
+
+    private val data = MutableLiveData<Post>()
+
+    override fun get(): LiveData<Post> = data
+
     // ----------------
     // создаем объект класса Post
     private var post = Post(
@@ -24,11 +29,13 @@ class PostRepositoryInMemoryImpl: PostRepository {
                 " → http://netolo.gy/fyb",
         published = "21 мая в 18:36"
     )
+
+        // сеттер для автоматического обновления LiveData при изменении post
+        set(value) {
+            field = value   // сохраняем новое значение в поле
+            data.value = value // обновляем LiveData
+        }
     // ----------------
-
-    private val data = MutableLiveData(post)
-
-    override fun get(): LiveData<Post> = data
 
     // ----------------
     override fun like() {

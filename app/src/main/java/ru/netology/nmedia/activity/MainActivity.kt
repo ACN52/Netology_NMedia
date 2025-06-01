@@ -24,60 +24,41 @@ class MainActivity : AppCompatActivity() {
 
         val viewModel: PostViewModel by viewModels()
 
-        viewModel.data.observe(this){post->
-
-            // ==================
-            // Функции для обновления UI
-            fun updateLikeUI() {
-                with(binding) {
-                    imageHeart.setImageResource(
-                        if (!post.likeByMe) R.drawable.baseline_favorite_24
-                        else R.drawable.baseline_thumb_up_24
-                    )
-                    textCountLikes.text = formatNumberShort(post.likesCount)
-                }
-            }
-
-            fun updateShareUI() {
-                binding.textCountShare.text = formatNumberShort(post.sharesCount)
-            }
-
-            fun updateLookUI() {
-                binding.textCountLook.text = formatNumberShort(post.looksCount)
-            }
-            post.looksCount++
-            updateLookUI()
-            // ==================
-
-            // Обработчики кликов
-            // ==================
+        // Наблюдаем за изменениями данных
+        // ========================
+        viewModel.data.observe(this) { post ->
             with(binding) {
                 textAuthor.text = post.author
                 textContent.text = post.content
                 textPublished.text = post.published
 
-                // Инициализация состояний UI
-                updateLikeUI()
-                updateShareUI()
-
-                imageHeart.setOnClickListener {
-                    post.likeByMe = !post.likeByMe
-                    if (post.likeByMe) {
-                        post.likesCount++
-                    } else {
-                        post.likesCount--
-                    }
-                    updateLikeUI()
-                }
-
-                imageShare.setOnClickListener {
-                    post.sharesCount++
-                    updateShareUI()
-                }
+                // Обновление UI на основе текущего состояния
+                imageHeart.setImageResource(
+                    if (!post.likeByMe) R.drawable.baseline_favorite_24
+                    else R.drawable.baseline_thumb_up_24
+                )
+                textCountLikes.text = formatNumberShort(post.likesCount)
+                textCountShare.text = formatNumberShort(post.sharesCount)
+                textCountLook.text = formatNumberShort(post.looksCount)
             }
-            // ==================
         }
+
+        // Обработчики кликов
+        with(binding) {
+            imageHeart.setOnClickListener {
+                viewModel.like()
+            }
+
+            imageShare.setOnClickListener {
+                viewModel.share()
+            }
+        }
+
+        // Увеличиваем счетчик просмотров при отображении
+        viewModel.view()
+        // ========================
 
     }
 
 }
+
