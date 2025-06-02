@@ -5,7 +5,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import ru.netology.nmedia.R
+import ru.netology.nmedia.adapter.PostAdapter
 import ru.netology.nmedia.databinding.ActivityMainBinding
+import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.formatNumberShort
 import ru.netology.nmedia.viewmodel.PostViewModel
 
@@ -24,41 +26,15 @@ class MainActivity : AppCompatActivity() {
 
         val viewModel: PostViewModel by viewModels()
 
-        // Наблюдаем за изменениями данных
-        // ========================
-        viewModel.data.observe(this) { post ->
-            with(binding) {
-                textAuthor.text = post.author
-                textContent.text = post.content
-                textPublished.text = post.published
+        val adapter = PostAdapter(
+            onLikeListener = { post -> viewModel.like(post.id) },
+            onShareListener = { post -> viewModel.share(post.id) },
+            onViewListener = { post -> viewModel.view(post.id) }
+        )
+        binding.recyclerId.adapter = adapter
 
-                // Обновление UI на основе текущего состояния
-                imageHeart.setImageResource(
-                    if (!post.likeByMe) R.drawable.baseline_favorite_24
-                    else R.drawable.baseline_thumb_up_24
-                )
-                textCountLikes.text = formatNumberShort(post.likesCount)
-                textCountShare.text = formatNumberShort(post.sharesCount)
-                textCountLook.text = formatNumberShort(post.looksCount)
-            }
+        viewModel.data.observe(this) { posts ->
+            adapter.submitList(posts)
         }
-
-        // Обработчики кликов
-        with(binding) {
-            imageHeart.setOnClickListener {
-                viewModel.like()
-            }
-
-            imageShare.setOnClickListener {
-                viewModel.share()
-            }
-        }
-
-        // Увеличиваем счетчик просмотров при отображении
-        viewModel.view()
-        // ========================
-
     }
-
 }
-

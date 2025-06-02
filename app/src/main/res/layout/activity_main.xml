@@ -1,166 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
-    android:padding="@dimen/spacing_16dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:fitsSystemWindows="true"
     tools:context=".activity.MainActivity">
 
-    <ImageView
-        android:id="@+id/iconNetology"
-        android:layout_width="@dimen/avatar_size_48dp"
-        android:layout_height="@dimen/avatar_size_48dp"
-        android:contentDescription="@string/iconn"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/netology" />
-
-    <TextView
-        android:id="@+id/textAuthor"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-
-        android:layout_marginStart="@dimen/spacing_16dp"
-        android:layout_marginEnd="@dimen/spacing_16dp"
-        android:maxLines="1"
-        android:ellipsize="end"
-
-        app:layout_constraintEnd_toStartOf="@id/iconMenu"
-        app:layout_constraintStart_toEndOf="@+id/iconNetology"
-        app:layout_constraintTop_toTopOf="@+id/iconNetology"
-        tools:text="@sample/posts.json/data/author"/>
-
-    <TextView
-        android:id="@+id/textPublished"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        android:layout_marginStart="@dimen/spacing_16dp"
-
-        app:layout_constraintBottom_toBottomOf="@+id/iconNetology"
-        app:layout_constraintStart_toEndOf="@+id/iconNetology"
-        app:layout_constraintTop_toBottomOf="@+id/textAuthor"
-        tools:text="@sample/posts.json/data/published" />
-
-    <androidx.constraintlayout.widget.Barrier
-        android:id="@+id/barrierOne"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:barrierDirection="bottom"
-        app:constraint_referenced_ids="iconNetology, textPublished, iconMenu"/>
-
-    <ImageView
-        android:id="@+id/iconMenu"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_16dp"
-        android:contentDescription="@string/menu"
-        app:layout_constraintBottom_toBottomOf="@+id/textAuthor"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/textAuthor"
-        app:srcCompat="@drawable/baseline_more_vert_24" />
-
-    <TextView
-        android:id="@+id/nmediaView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_16dp"
-
-        android:shadowColor="@color/yellow"
-        android:shadowRadius="5"
-        android:text="@string/nmedia"
-
-        android:textColor="@color/black"
-        android:textSize="24sp"
-        android:textStyle="bold"
-
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/barrierOne" />
-
-    <TextView
-        android:id="@+id/textContent"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerId"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-
-        android:layout_marginTop="56dp"
-
-        android:autoLink="web"
-
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/barrierOne"
-        tools:text="@sample/posts.json/data/content" />
-
-    <ImageView
-        android:id="@+id/imageHeart"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/card_post" />
 
-        android:layout_marginTop="16dp"
-        android:contentDescription="@string/likesdescr"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textContent"
-        app:srcCompat="@drawable/baseline_favorite_24" />
-
-    <TextView
-        android:id="@+id/textCountLikes"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_16dp"
-
-        android:text="@string/zero_likes"
-        app:layout_constraintBottom_toBottomOf="@+id/imageHeart"
-        app:layout_constraintStart_toEndOf="@+id/imageHeart"
-        app:layout_constraintTop_toTopOf="@+id/imageHeart" />
-
-    <ImageView
-        android:id="@+id/imageShare"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        android:layout_marginStart="96dp"
-        android:contentDescription="@string/sharedescr"
-        app:layout_constraintBottom_toBottomOf="@+id/textCountLikes"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/textCountLikes"
-        app:srcCompat="@drawable/baseline_share_24" />
-
-    <TextView
-        android:id="@+id/textCountShare"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_16dp"
-
-        android:text="@string/zero_share"
-        app:layout_constraintBottom_toBottomOf="@+id/imageShare"
-        app:layout_constraintStart_toEndOf="@+id/imageShare"
-        app:layout_constraintTop_toTopOf="@+id/imageShare" />
-
-    <ImageView
-        android:id="@+id/imageLook"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="60dp"
-
-        android:contentDescription="@string/lookdescr"
-        app:layout_constraintBottom_toBottomOf="@+id/textCountShare"
-        app:layout_constraintTop_toTopOf="@+id/textCountShare"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/baseline_visibility_24"  />
-
-    <TextView
-        android:id="@+id/textCountLook"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_16dp"
-
-        android:text="@string/zero_look"
-        app:layout_constraintBottom_toBottomOf="@+id/imageLook"
-        app:layout_constraintStart_toEndOf="@+id/imageLook"
-        app:layout_constraintTop_toTopOf="@+id/imageLook" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

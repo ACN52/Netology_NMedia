@@ -10,47 +10,82 @@ import ru.netology.nmedia.dto.Post
 
 class PostRepositoryInMemoryImpl: PostRepository {
 
-    private val data = MutableLiveData<Post>()
-
-    override fun get(): LiveData<Post> = data
-
     // ----------------
     // создаем объект класса Post
-    private var post = Post(
-        id = 1,
-        author = "Нетология. Университет интернет-профессий будущего",
-        content = "Привет, это новая Нетология! Когда-то Нетология начиналась" +
-                " с интенсивов по онлайн-маркетингу. Затем появились курсы по дизайну," +
-                " разработке, аналитике и управлению. Мы растём сами и помогаем расти" +
-                " студентам: от новичков до уверенных профессионалов." +
-                " Но самое важное остаётся с нами: мы верим, что в каждом уже есть сила," +
-                " которая заставляет хотеть больше, целиться выше, бежать быстрее." +
-                " Наша миссия — помочь встать на путь роста и начать цепочку перемен" +
-                " → http://netolo.gy/fyb",
-        published = "21 мая в 18:36"
+    private var posts = listOf(
+        Post(
+            id = 1,
+            author = "Нетология. Университет интернет-профессий будущего",
+            content = "Привет, это новая Нетология! Когда-то Нетология начиналась" +
+                    " с интенсивов по онлайн-маркетингу. Затем появились курсы по дизайну," +
+                    " разработке, аналитике и управлению. Мы растём сами и помогаем расти" +
+                    " студентам: от новичков до уверенных профессионалов." +
+                    " Но самое важное остаётся с нами: мы верим, что в каждом уже есть сила," +
+                    " которая заставляет хотеть больше, целиться выше, бежать быстрее." +
+                    " Наша миссия — помочь встать на путь роста и начать цепочку перемен" +
+                    " → http://netolo.gy/fyb",
+            published = "21 мая в 18:36"
+        ),
+        Post(
+            id = 2,
+            author = "Нетология_2.",
+            content = "Привет, это новая Нетология!",
+            published = "02 июня в 18:36"
+        ),
+        Post(
+            id = 3,
+            author = "Нетология_3.",
+            content = "Привет!",
+            published = "03 июня в 18:36"
+        )
     )
 
-        // сеттер для автоматического обновления LiveData при изменении post
-        set(value) {
-            field = value   // сохраняем новое значение в поле
-            data.value = value // обновляем LiveData
+    private val data = MutableLiveData(posts)
+
+    // init блок для инициализации LiveData
+    init {
+        data.value = posts
+    }
+
+    override fun getAll(): LiveData<List<Post>> = data
+
+    // ================
+    override fun like(id: Long) {
+        posts = posts.map { post ->
+            if (post.id == id) {
+                val newLikeState = !post.likeByMe
+                post.copy(
+                    likeByMe = newLikeState,
+                    likesCount = if (newLikeState) post.likesCount + 1 else post.likesCount - 1
+                )
+            } else {
+                post
+            }
         }
-    // ----------------
-
-    // ----------------
-    override fun like() {
-        post = post.copy(
-            likeByMe = !post.likeByMe,
-            likesCount = if (!post.likeByMe) post.likesCount + 1 else post.likesCount - 1
-        )
+        data.value = posts
     }
 
-    override fun share() {
-        post = post.copy(sharesCount = post.sharesCount + 1)
+    override fun share(id: Long) {
+        posts = posts.map { post ->
+            if (post.id == id) {
+                post.copy(sharesCount = post.sharesCount + 1)
+            } else {
+                post
+            }
+        }
+        data.value = posts
     }
 
-    override fun view() {
-        post = post.copy(looksCount = post.looksCount + 1)
+    override fun view(id: Long) {
+        posts = posts.map { post ->
+            if (post.id == id) {
+                post.copy(looksCount = post.looksCount + 1)
+            } else {
+                post
+            }
+        }
+        data.value = posts
     }
+    // ================
 
 }
