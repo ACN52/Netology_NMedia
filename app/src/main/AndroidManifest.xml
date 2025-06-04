@@ -12,6 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NMedia"
         tools:targetApi="31">
+        <service
+            android:name=".AndroidUtils"
+            android:enabled="true"
+            android:exported="true"></service>
+
         <activity
             android:name=".activity.MainActivity"
             android:exported="true">

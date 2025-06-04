@@ -2,6 +2,7 @@ package ru.netology.nmedia.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -14,22 +15,23 @@ import ru.netology.nmedia.formatNumberShort
 typealias OnLikeListener = (post: Post) -> Unit   // Добавляем CallBack
 typealias OnShareListener = (post: Post) -> Unit
 typealias OnViewListener = (post: Post) -> Unit
+typealias OnRemoveListener = (post: Post) -> Unit
+
+interface OnInteractorListener {
+    fun onLike(post: Post)
+    fun onShare(post: Post)
+    fun onView(post: Post)
+    fun onRemove(post: Post)
+    fun onEdit(post: Post)
+}
 
 class PostAdapter(
-    private val onLikeListener: OnLikeListener,
-    private val onShareListener: OnShareListener,
-    private val onViewListener: OnViewListener
+    private val onInteractorListener: OnInteractorListener
 ) : ListAdapter<Post, PostViewHolder>(PostDiffCallBack) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
         val binding = CardPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return PostViewHolder(
-            binding,
-            onLikeListener,
-            onShareListener,
-            onViewListener
-        )
-        //return PostViewHolder(binding, onLikeListener)
+        return PostViewHolder(binding, onInteractorListener)
     }
 
     override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
@@ -40,9 +42,7 @@ class PostAdapter(
 
 class PostViewHolder(
     private val binding: CardPostBinding,
-    private val onLikeListener: OnLikeListener,
-    private val onShareListener: OnShareListener,
-    private val onViewListener: OnViewListener
+    private val onInteractorListener: OnInteractorListener
 ): RecyclerView.ViewHolder(binding.root) {
     fun bind(post: Post) = with(binding) {
         textAuthor.text = post.author
@@ -59,17 +59,41 @@ class PostViewHolder(
         textCountLook.text = formatNumberShort(post.looksCount)
 
         // Обработчики кликов
+        // ==================
         imageHeart.setOnClickListener {
-            onLikeListener(post)  // Вызываем CallBack для лайка
+            onInteractorListener.onLike(post)  // Вызываем CallBack для лайка
         }
 
         imageShare.setOnClickListener {
-            onShareListener(post)
+            onInteractorListener.onShare(post)
         }
 
         imageLook.setOnClickListener {
-            onViewListener(post)  // Вызываем колбэк просмотра поста
+            onInteractorListener.onView(post)  // Вызываем колбэк просмотра поста
         }
+
+        iconMenu.setOnClickListener {
+            PopupMenu(it.context, it).apply {
+                inflate(R.menu.post_options)
+                setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        R.id.remove -> {
+                            onInteractorListener.onRemove(post)
+                            true
+                        }
+
+                        R.id.edit -> {
+                            onInteractorListener.onEdit(post)
+                            true
+                        }
+                        else -> false
+                    }
+
+                }
+
+            }.show()
+        }
+        // ==================
 
     }
 }

@@ -10,4 +10,11 @@
     <string name="zero_likes" translatable="false">0</string>
     <string name="zero_share" translatable="false">0</string>
     <string name="zero_look" translatable="false">0</string>
+    <string name="menu_remove">Remove</string>
+    <string name="menu_edit">Edit</string>
+    <string name="inputtext">InputText</string>
+    <string name="buttonsave" translatable="false">buttonSave</string>
+    <string name="buttonabort" translatable="false">buttonAbort</string>
+    <string name="error_empty_content">Error</string>
+
 </resources>

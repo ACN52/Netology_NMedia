@@ -10,11 +10,12 @@ import ru.netology.nmedia.dto.Post
 
 class PostRepositoryInMemoryImpl: PostRepository {
 
+    private var index: Long = 1L
     // ----------------
     // создаем объект класса Post
     private var posts = listOf(
         Post(
-            id = 1,
+            id = index++,
             author = "Нетология. Университет интернет-профессий будущего",
             content = "Привет, это новая Нетология! Когда-то Нетология начиналась" +
                     " с интенсивов по онлайн-маркетингу. Затем появились курсы по дизайну," +
@@ -27,13 +28,13 @@ class PostRepositoryInMemoryImpl: PostRepository {
             published = "21 мая в 18:36"
         ),
         Post(
-            id = 2,
+            id = index++,
             author = "Нетология_2.",
             content = "Привет, это новая Нетология!",
             published = "02 июня в 18:36"
         ),
         Post(
-            id = 3,
+            id = index++,
             author = "Нетология_3.",
             content = "Привет!",
             published = "03 июня в 18:36"
@@ -87,5 +88,29 @@ class PostRepositoryInMemoryImpl: PostRepository {
         data.value = posts
     }
     // ================
+
+    override fun removeById(id: Long) {
+        posts = posts.filter {it.id != id}
+        data.value = posts
+    }
+
+    override fun save(post: Post) {
+        posts = if (post.id == 0L) {
+            listOf(
+                post.copy(
+                    id = index++,
+                    author = "Me",
+                    published = "now"
+                )
+            ) + posts
+        } else {
+            posts.map {
+                if (post.id == it.id) {
+                    it.copy(content = post.content)
+                } else it
+            }
+        }
+        data.value = posts
+    }
 
 }
