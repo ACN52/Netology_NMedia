@@ -83,15 +83,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-//        viewModel.edited.observe(this) { post ->
-//            if (post.id != 0L) {
-//                with(binding.textInput) {
-//                    requestFocus()
-//                    setText(post.content)
-//                }
-//            }
-//        }
-
         with(binding) {
             buttonSave.setOnClickListener {
                 if (textInput.text.isNullOrBlank()) {

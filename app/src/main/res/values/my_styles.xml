@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style
+        name="Style.LikeCheckBox" parent="Widget.MaterialComponents.CompoundButton.CheckBox">
+        <item name="buttonTint">@color/color_like</item>
+    </style>
+
+    <style
+        name="Style.LikeButton" parent="Widget.MaterialComponents.Button.TextButton.Icon">
+        <item name="iconTint">@color/color_like</item>
+    </style>
+
+    <style
+        name="Style.ShareButton" parent="Widget.MaterialComponents.Button.TextButton.Icon">
+        <item name="iconTint">@color/my_red_heart</item>
+    </style>
+
+    <style name="Style.MenuButton" parent="Widget.MaterialComponents.PopupMenu">
+        <item name="iconTint">@color/my_red_heart</item>
+        <item name="iconSize">34dp</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+    </style>
+
+</resources>

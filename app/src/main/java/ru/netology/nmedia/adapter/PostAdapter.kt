@@ -50,12 +50,15 @@ class PostViewHolder(
         textPublished.text = post.published
 
         // Обновление UI на основе текущего состояния
-        imageHeart.setImageResource(
-            if (!post.likeByMe) R.drawable.baseline_favorite_24
-            else R.drawable.baseline_thumb_up_24
-        )
-        textCountLikes.text = formatNumberShort(post.likesCount)
-        textCountShare.text = formatNumberShort(post.sharesCount)
+        imageHeart.apply {
+            isChecked = post.likeByMe
+            //text = post.likesCount.toString()
+        }
+
+        //imageHeart.isChecked = post.likeByMe
+
+        imageHeart.text = formatNumberShort(post.likesCount)
+        imageShare.text = formatNumberShort(post.sharesCount)
         textCountLook.text = formatNumberShort(post.looksCount)
 
         // Обработчики кликов

@@ -50,16 +50,17 @@
         app:barrierDirection="bottom"
         app:constraint_referenced_ids="iconNetology, textPublished, iconMenu"/>
 
-    <ImageView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/iconMenu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        style="@style/Style.MenuButton"
         android:layout_marginStart="@dimen/spacing_16dp"
         android:contentDescription="@string/menu"
         app:layout_constraintBottom_toBottomOf="@+id/textAuthor"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/textAuthor"
-        app:srcCompat="@drawable/baseline_more_vert_24" />
+        app:icon="@drawable/baseline_more_vert_24"/>
 
     <TextView
         android:id="@+id/nmediaView"
@@ -93,50 +94,32 @@
         app:layout_constraintTop_toBottomOf="@id/barrierOne"
         tools:text="@sample/posts.json/data/content" />
 
-    <ImageView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/imageHeart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
+        style="@style/Style.LikeButton"
+        android:checkable="true"
         android:layout_marginTop="16dp"
         android:contentDescription="@string/likesdescr"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textContent"
-        app:srcCompat="@drawable/baseline_favorite_24" />
+        app:icon="@drawable/ic_like"
+        tools:checked="true"
+        tools:text="1"/>
 
-    <TextView
-        android:id="@+id/textCountLikes"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_16dp"
-
-        android:text="@string/zero_likes"
-        app:layout_constraintBottom_toBottomOf="@+id/imageHeart"
-        app:layout_constraintStart_toEndOf="@+id/imageHeart"
-        app:layout_constraintTop_toTopOf="@+id/imageHeart" />
-
-    <ImageView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/imageShare"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
+        style="@style/Style.ShareButton"
         android:layout_marginStart="96dp"
         android:contentDescription="@string/sharedescr"
-        app:layout_constraintBottom_toBottomOf="@+id/textCountLikes"
+        app:layout_constraintBottom_toBottomOf="@+id/imageHeart"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/textCountLikes"
-        app:srcCompat="@drawable/baseline_share_24" />
-
-    <TextView
-        android:id="@+id/textCountShare"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_16dp"
-
-        android:text="@string/zero_share"
-        app:layout_constraintBottom_toBottomOf="@+id/imageShare"
-        app:layout_constraintStart_toEndOf="@+id/imageShare"
-        app:layout_constraintTop_toTopOf="@+id/imageShare" />
+        app:layout_constraintTop_toTopOf="@+id/imageHeart"
+        app:icon="@drawable/baseline_share_24"
+        tools:text="0"/>
 
     <ImageView
         android:id="@+id/imageLook"
@@ -145,8 +128,8 @@
         android:layout_marginEnd="60dp"
 
         android:contentDescription="@string/lookdescr"
-        app:layout_constraintBottom_toBottomOf="@+id/textCountShare"
-        app:layout_constraintTop_toTopOf="@+id/textCountShare"
+        app:layout_constraintBottom_toBottomOf="@+id/imageShare"
+        app:layout_constraintTop_toTopOf="@+id/imageShare"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/baseline_visibility_24"  />
 
