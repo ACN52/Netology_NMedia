@@ -21,4 +21,10 @@
         <item name="backgroundTint">@android:color/transparent</item>
     </style>
 
+    <style
+        name="Style.AppBarButton" parent="Widget.MaterialComponents.BottomAppBar.Colored">
+        <item name="backgroundTint">@color/my_green</item>
+        <item name="iconTint">@color/my_red_heart</item>
+    </style>
+
 </resources>

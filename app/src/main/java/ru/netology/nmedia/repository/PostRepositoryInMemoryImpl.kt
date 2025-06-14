@@ -25,19 +25,22 @@ class PostRepositoryInMemoryImpl: PostRepository {
                     " которая заставляет хотеть больше, целиться выше, бежать быстрее." +
                     " Наша миссия — помочь встать на путь роста и начать цепочку перемен" +
                     " → http://netolo.gy/fyb",
-            published = "21 мая в 18:36"
+            published = "21 мая в 18:36",
+            video = ""
         ),
         Post(
             id = index++,
             author = "Нетология_2.",
             content = "Привет, это новая Нетология!",
-            published = "02 июня в 18:36"
+            published = "02 июня в 18:36",
+            video = "https://vkvideo.ru/video-164984229_456239401"
         ),
         Post(
             id = index++,
             author = "Нетология_3.",
             content = "Привет!",
-            published = "03 июня в 18:36"
+            published = "03 июня в 18:36",
+            video =""
         )
     )
 

@@ -1,12 +1,17 @@
 package ru.netology.nmedia.adapter
 
+import android.content.Intent
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.R
+import ru.netology.nmedia.activity.NewPostActivity
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.formatNumberShort
@@ -48,6 +53,7 @@ class PostViewHolder(
         textAuthor.text = post.author
         textContent.text = post.content
         textPublished.text = post.published
+        textVideo.text = post.video
 
         // Обновление UI на основе текущего состояния
         imageHeart.apply {
@@ -59,7 +65,7 @@ class PostViewHolder(
 
         imageHeart.text = formatNumberShort(post.likesCount)
         imageShare.text = formatNumberShort(post.sharesCount)
-        textCountLook.text = formatNumberShort(post.looksCount)
+        imageLook.text = formatNumberShort(post.looksCount)
 
         // Обработчики кликов
         // ==================
@@ -79,6 +85,7 @@ class PostViewHolder(
             PopupMenu(it.context, it).apply {
                 inflate(R.menu.post_options)
                 setOnMenuItemClickListener { item ->
+
                     when (item.itemId) {
                         R.id.remove -> {
                             onInteractorListener.onRemove(post)
@@ -97,6 +104,15 @@ class PostViewHolder(
             }.show()
         }
         // ==================
+
+        // Обработка нажатия на ссылку textVideo
+        textVideo.setOnClickListener {
+            if (post.video.isNotEmpty()) {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(post.video))
+                it.context.startActivity(intent)
+            }
+        }
+
 
     }
 }

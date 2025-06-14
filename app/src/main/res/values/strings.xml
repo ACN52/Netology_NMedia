@@ -16,5 +16,14 @@
     <string name="buttonsave" translatable="false">buttonSave</string>
     <string name="buttonabort" translatable="false">buttonAbort</string>
     <string name="error_empty_content">Error</string>
+    <string name="chooser_share_post" translatable="false">Share post</string>
+    <string name="add_post" translatable="false">Add post</string>
+    <string name="save" translatable="false">Save</string>
+    <string name="appbarbuttondescr" translatable="false">AppBarButtonDescr</string>
+    <string name="enter_text_hint">EnterTextHint</string>
+    <string name="buttoncreate">Create</string>
+    <string name="update">Update</string>
+    <string name="linkvideo" translatable="false">linkVideo</string>
+    <string name="error_empty_video_link">ErrorLinkVideo</string>
 
 </resources>

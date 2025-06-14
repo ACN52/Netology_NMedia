@@ -94,19 +94,31 @@
         app:layout_constraintTop_toBottomOf="@id/barrierOne"
         tools:text="@sample/posts.json/data/content" />
 
+    <TextView
+        android:id="@+id/textVideo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginVertical="@dimen/spacing_16dp"
+        android:hint="@string/linkvideo"
+        android:textColor="@color/link_video"
+        android:autoLink="web"
+        app:layout_constraintEnd_toEndOf="@+id/textContent"
+        app:layout_constraintStart_toStartOf="@+id/textContent"
+        app:layout_constraintTop_toBottomOf="@+id/textContent" />
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/imageHeart"
+        style="@style/Style.LikeButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/Style.LikeButton"
         android:checkable="true"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/spacing_16dp"
         android:contentDescription="@string/likesdescr"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textContent"
         app:icon="@drawable/ic_like"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textVideo"
         tools:checked="true"
-        tools:text="1"/>
+        tools:text="1" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/imageShare"
@@ -121,26 +133,16 @@
         app:icon="@drawable/baseline_share_24"
         tools:text="0"/>
 
-    <ImageView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/imageLook"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="60dp"
-
-        android:contentDescription="@string/lookdescr"
+        style="@style/Style.ShareButton"
+        android:contentDescription="@string/sharedescr"
         app:layout_constraintBottom_toBottomOf="@+id/imageShare"
-        app:layout_constraintTop_toTopOf="@+id/imageShare"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/baseline_visibility_24"  />
+        app:layout_constraintTop_toTopOf="@+id/imageShare"
+        app:icon="@drawable/baseline_visibility_24"
+        tools:text="0"/>
 
-    <TextView
-        android:id="@+id/textCountLook"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/spacing_16dp"
-
-        android:text="@string/zero_look"
-        app:layout_constraintBottom_toBottomOf="@+id/imageLook"
-        app:layout_constraintStart_toEndOf="@+id/imageLook"
-        app:layout_constraintTop_toTopOf="@+id/imageLook" />
 </androidx.constraintlayout.widget.ConstraintLayout>

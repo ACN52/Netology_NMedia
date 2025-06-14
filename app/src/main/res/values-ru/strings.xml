@@ -6,4 +6,8 @@
     <string name="inputtext">Напишите сообщение</string>
     <string name="error_empty_content">Ошибка! Пустое Сообщение</string>
     <string name="menu_edit">Редактировать</string>
+    <string name="enter_text_hint">Поле для ввода текста</string>
+    <string name="buttoncreate">Создать</string>
+    <string name="update">Обновить</string>
+    <string name="error_empty_video_link">Возможно ссылки НЕ существует...</string>
 </resources>
