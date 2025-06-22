@@ -3,10 +3,12 @@ package ru.netology.nmedia.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.AcManagementBinding
 import ru.netology.nmedia.databinding.AcNewPostBinding
@@ -49,10 +51,21 @@ class NewPostActivity : AppCompatActivity() {
         // --------------------
         binding.buttonUpdate.setOnClickListener {
             val content = binding.editTextCreateUpdate.text.toString()
-            setResult(Activity.RESULT_OK, Intent().apply {
-                putExtra(Intent.EXTRA_TEXT, content)
-            })
-            finish()
+            if (content.isNotEmpty()) {
+                setResult(Activity.RESULT_OK, Intent().apply {
+                    putExtra(Intent.EXTRA_TEXT, content)
+                })
+                finish()
+            } else {
+                // Уведомление
+                // Toast.makeText(this, "Пост не может быть пустым", Toast.LENGTH_SHORT).show()
+
+                Snackbar.make(binding.root, R.string.error_empty_content, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(android.R.string.ok) {
+                        finish()
+                    }.show()
+
+            }
         }
         // --------------------
 
