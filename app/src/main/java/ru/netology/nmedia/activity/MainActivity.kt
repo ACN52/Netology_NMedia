@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onShare(post: Post) {
-                    //viewModel.share(post.id)
+                    viewModel.share(post.id)   // Увеличиваем счетчик в репозитории
                     val intent = Intent().apply {
                         action = Intent.ACTION_SEND
                         putExtra(Intent.EXTRA_TEXT, post.content)

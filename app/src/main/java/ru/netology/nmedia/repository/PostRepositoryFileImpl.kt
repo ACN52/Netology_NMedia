@@ -15,16 +15,17 @@ class PostRepositoryFileImpl(private val context: Context) : PostRepository {
 
     private var nextId = 1L
 
-    val currentTime = System.currentTimeMillis()
-    val dateFormat = SimpleDateFormat("dd.MM.yyyy   HH:mm", Locale.getDefault())
-    val formattedDate = dateFormat.format(Date(currentTime))
+    private  val currentTime = System.currentTimeMillis()
+    private  val dateFormat = SimpleDateFormat("dd.MM.yyyy   HH:mm", Locale.getDefault())
+    private  val formattedDate = dateFormat.format(Date(currentTime))
     // ----------------
 
     // создаем объект класса Post
     private var posts = emptyList<Post>()
         set(value) {   // Переопределяем метод set() в переменной posts
             field = value
-            data.value = posts
+            //data.value = posts
+            data.value = value // чтобы избежать потенциальной рекурсии и сделать поведение более предсказуемым
             sync()
         }
 
@@ -75,6 +76,7 @@ class PostRepositoryFileImpl(private val context: Context) : PostRepository {
         //data.value = posts
         //sync()
     }
+
 
     override fun view(id: Long) {
         posts = posts.map { post ->
