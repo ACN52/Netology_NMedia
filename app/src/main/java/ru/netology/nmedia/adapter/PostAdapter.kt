@@ -5,29 +5,23 @@ import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.R
-import ru.netology.nmedia.activity.NewPostActivity
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.formatNumberShort
-
-
-typealias OnLikeListener = (post: Post) -> Unit   // Добавляем CallBack
-typealias OnShareListener = (post: Post) -> Unit
-typealias OnViewListener = (post: Post) -> Unit
-typealias OnRemoveListener = (post: Post) -> Unit
 
 interface OnInteractorListener {
     fun onLike(post: Post)
     fun onShare(post: Post)
     fun onView(post: Post)
     fun onRemove(post: Post)
-    fun onEdit(post: Post)
+    fun onEdit(post: Post)   // Для создания нового поста
+    fun onUpdate(post: Post) // Для обновления Поста
+    fun onContentClicked(post: Post)
 }
 
 class PostAdapter(
@@ -58,10 +52,8 @@ class PostViewHolder(
         // Обновление UI на основе текущего состояния
         imageHeart.apply {
             isChecked = post.likeByMe
-            //text = post.likesCount.toString()
-        }
 
-        //imageHeart.isChecked = post.likeByMe
+        }
 
         imageHeart.text = formatNumberShort(post.likesCount)
         imageShare.text = formatNumberShort(post.sharesCount)
@@ -113,6 +105,10 @@ class PostViewHolder(
             }
         }
 
+        // Обработка нажатия на поле textContent
+        textContent.setOnClickListener {
+            onInteractorListener.onContentClicked(post)
+        }
 
     }
 }
