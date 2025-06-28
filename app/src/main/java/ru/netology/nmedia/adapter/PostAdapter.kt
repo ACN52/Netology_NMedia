@@ -47,11 +47,11 @@ class PostViewHolder(
         textAuthor.text = post.author
         textContent.text = post.content
         textPublished.text = post.published
-        textVideo.text = post.video
+        //textVideo.text = post.video
 
         // Обновление UI на основе текущего состояния
         imageHeart.apply {
-            isChecked = post.likeByMe
+            isChecked = post.likedByMe
 
         }
 
@@ -97,13 +97,13 @@ class PostViewHolder(
         }
         // ==================
 
-        // Обработка нажатия на ссылку textVideo
-        textVideo.setOnClickListener {
-            if (post.video.isNotEmpty()) {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(post.video))
-                it.context.startActivity(intent)
-            }
-        }
+//        // Обработка нажатия на ссылку textVideo
+//        textVideo.setOnClickListener {
+//            if (post.video.isNotEmpty()) {
+//                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(post.video))
+//                it.context.startActivity(intent)
+//            }
+//        }
 
         // Обработка нажатия на поле textContent
         textContent.setOnClickListener {

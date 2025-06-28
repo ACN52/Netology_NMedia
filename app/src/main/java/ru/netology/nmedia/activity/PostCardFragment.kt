@@ -40,10 +40,10 @@ class PostCardFragment: Fragment() {
                     textAuthor.text = post.author
                     textContent.text = post.content
                     textPublished.text = post.published
-                    textVideo.text = post.video
+                    //textVideo.text = post.video
 
                     imageHeart.apply {
-                        isChecked = post.likeByMe
+                        isChecked = post.likedByMe
                         text = formatNumberShort(post.likesCount)
                     }
                     imageShare.text = formatNumberShort(post.sharesCount)

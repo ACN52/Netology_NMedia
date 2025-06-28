@@ -21,6 +21,8 @@ import ru.netology.nmedia.viewmodel.PostViewModel
 
 class FeedFragment : Fragment() {
 
+    val viewModel: PostViewModel by viewModels(ownerProducer = ::requireParentFragment)
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -32,17 +34,15 @@ class FeedFragment : Fragment() {
             false
         )
 
-        val viewModel: PostViewModel by viewModels(ownerProducer = ::requireParentFragment)
-
         val adapter = PostAdapter(
             object : OnInteractorListener {
 
                 override fun onLike(post: Post) {
-                    viewModel.like(post.id)
+                    viewModel.likeById(post.id)
                 }
 
                 override fun onShare(post: Post) {
-                    viewModel.share(post.id)   // Увеличиваем счетчик в репозитории
+                    viewModel.shareById(post.id)   // Увеличиваем счетчик в репозитории
                     val intent = Intent().apply {
                         action = Intent.ACTION_SEND
                         putExtra(Intent.EXTRA_TEXT, post.content)
@@ -55,7 +55,7 @@ class FeedFragment : Fragment() {
                 }
 
                 override fun onView(post: Post) {
-                    viewModel.view(post.id)
+                    viewModel.viewById(post.id)
                 }
 
                 override fun onRemove(post: Post) {
@@ -119,5 +119,4 @@ class FeedFragment : Fragment() {
         var Bundle.textArgs by StringArg
 
     }
-
 }
