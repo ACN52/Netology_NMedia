@@ -25,5 +25,9 @@
     <string name="update">Update</string>
     <string name="linkvideo" translatable="false">linkVideo</string>
     <string name="error_empty_video_link">ErrorLinkVideo</string>
+    <string name="google_play_unavailable" translatable="false">Google Api Unavailable</string>
+    <string name="notification_user_liked">User %1$s liked %2$s\'s post</string>
+    <string name="channel_remote_name">Server notifications</string>
+    <string name="channel_remote_description">Notifications from remote server</string>
 
 </resources>

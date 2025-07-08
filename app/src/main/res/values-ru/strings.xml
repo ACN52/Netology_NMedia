@@ -10,4 +10,7 @@
     <string name="buttoncreate">Создать</string>
     <string name="update">Обновить</string>
     <string name="error_empty_video_link">Возможно ссылки НЕ существует...</string>
+    <string name="notification_user_liked">Пользователь %1$s поставил Лайк %2$s\\\'s к посту</string>
+    <string name="channel_remote_name">Уведомления с сервера</string>
+    <string name="channel_remote_description">Уведомления с удаленного сервера</string>
 </resources>

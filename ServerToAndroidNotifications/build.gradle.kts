@@ -1,0 +1,16 @@
+plugins {
+    kotlin("jvm") version "2.0.0"
+}
+
+group "ru.netology.pusher"
+version "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation("com.google.firebase:firebase-admin:9.5.0")
+    implementation("org.slf4j:slf4j-simple:2.0.17")
+}
