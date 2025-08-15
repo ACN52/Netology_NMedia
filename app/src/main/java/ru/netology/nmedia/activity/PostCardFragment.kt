@@ -32,15 +32,19 @@ class PostCardFragment: Fragment() {
         // Получаем переданный ID поста
         val postId = arguments?.getLong("postId") ?: 0L
 
-        // Загружаем данные поста из ViewModel
-        viewModel.data.observe(viewLifecycleOwner) { posts ->
-            posts.find { it.id == postId }?.let { post ->
+        // Наблюдаем изменения в списке постов
+        viewModel.data.observe(viewLifecycleOwner) { feedModel ->
+            // Достаем список постов из объекта FeedModel
+            val posts = feedModel.posts ?: emptyList()
+
+            // Используем find(), чтобы найти пост по указанному ID
+            val post = posts.find { it.id == postId }
+
+            if (post != null) {
                 with(binding) {
-                    // Текстовые поля
                     textAuthor.text = post.author
                     textContent.text = post.content
                     textPublished.text = post.published
-                    //textVideo.text = post.video
 
                     imageHeart.apply {
                         isChecked = post.likedByMe

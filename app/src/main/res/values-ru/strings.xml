@@ -13,4 +13,7 @@
     <string name="notification_user_liked">Пользователь %1$s поставил Лайк %2$s\\\'s к посту</string>
     <string name="channel_remote_name">Уведомления с сервера</string>
     <string name="channel_remote_description">Уведомления с удаленного сервера</string>
+    <string name="empty_posts">Пустой пост</string>
+    <string name="error_loading">Ошибка загрузки</string>
+    <string name="retry_loading">Повторить загрузку</string>
 </resources>

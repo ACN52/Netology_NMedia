@@ -5,15 +5,24 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.R
 import ru.netology.nmedia.activity.FeedFragment.Companion.textArgs
 import ru.netology.nmedia.databinding.AcManagementBinding
+import ru.netology.nmedia.utils.StringArg
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class NewPostFragment : Fragment() {
+
+    companion object {
+        var Bundle.textArg: String? by StringArg
+    }
+
+    private val viewModel: PostViewModel by activityViewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -24,8 +33,6 @@ class NewPostFragment : Fragment() {
             container,
             false
         )
-
-        val viewModel: PostViewModel by viewModels(ownerProducer = ::requireParentFragment)
 
         // Устанавливаем текст из edited.value (если есть) или из аргументов
         viewModel.edited.value?.let { post ->
@@ -44,9 +51,10 @@ class NewPostFragment : Fragment() {
             if (binding.editTextCreateUpdate.text.isNotBlank()) {
                 val content = binding.editTextCreateUpdate.text.toString()
                 viewModel.changeContent(content)
-                viewModel.save()
+                viewModel.save()   // <- Отправка на сервер
+                viewModel.loadPosts()  //  Загружаем посты с Сервера
             }
-            findNavController().navigateUp()
+            findNavController().navigateUp()   // <- Закрываем фрагмент
         }
         // --------------------
 
