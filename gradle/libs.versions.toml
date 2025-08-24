@@ -20,6 +20,7 @@ playServices = "18.7.0"
 desugaring = "2.1.5"
 okhttp = "5.1.0"
 generativeai = "0.9.0"
+glide = "4.16.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,6 +42,7 @@ play-services = { group = "com.google.android.gms", name = "play-services-base",
 desugaring = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugaring" }
 okhttp = {module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

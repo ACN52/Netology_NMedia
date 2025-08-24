@@ -87,11 +87,25 @@ class PostRepositoryNetworkImpl: PostRepository {
 
 
     override fun shareById(id: Long) {
-        TODO("Not yet implemented")
+        val request: Request = Request.Builder()
+            .post(ByteArray(0).toRequestBody(null))
+            .url("${BASE_URL}/api/posts/$id/shares")
+            .build()
+
+        client.newCall(request)
+            .execute()
+            .close()
     }
 
     override fun viewById(id: Long) {
-        TODO("Not yet implemented")
+        val request: Request = Request.Builder()
+            .post(ByteArray(0).toRequestBody(null))
+            .url("${BASE_URL}/api/posts/$id/views")
+            .build()
+
+        client.newCall(request)
+            .execute()
+            .close()
     }
 
     override fun save(post: Post) {
