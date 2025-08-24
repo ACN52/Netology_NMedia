@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.play.services)
     coreLibraryDesugaring(libs.desugaring)
     implementation(libs.okhttp)
+    implementation(libs.glide)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

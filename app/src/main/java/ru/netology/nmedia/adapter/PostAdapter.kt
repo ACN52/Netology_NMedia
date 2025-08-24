@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -12,6 +13,7 @@ import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.extensions.loadAvatar
 import ru.netology.nmedia.formatNumberShort
 
 interface OnInteractorListener {
@@ -48,6 +50,9 @@ class PostViewHolder(
         textContent.text = post.content
         textPublished.text = post.published
         //textVideo.text = post.video
+
+        // Загружаем аватарки
+        iconNetology.loadAvatar(post.authorAvatar)
 
         // Обновление UI на основе текущего состояния
         imageHeart.apply {
