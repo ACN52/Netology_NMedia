@@ -35,6 +35,11 @@ android {
         }
     }
 
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true
+    }
+
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
 
@@ -61,6 +66,7 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.room)
     implementation(libs.generativeai)
+    implementation(libs.cronet.embedded)
     ksp(libs.androidx.room.compiler)
     implementation(platform(libs.firebase))
     implementation(libs.firebase.messaging)
@@ -68,6 +74,9 @@ dependencies {
     coreLibraryDesugaring(libs.desugaring)
     implementation(libs.okhttp)
     implementation(libs.glide)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.logging.interceptor)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
