@@ -13,12 +13,16 @@ import ru.netology.nmedia.databinding.ActivityAppBinding
 import android.Manifest
 import android.content.pm.PackageManager
 import android.widget.Toast
+import com.bumptech.glide.Glide
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.FirebaseMessaging
 
-
 class AppActivity : AppCompatActivity() {
+
+    private val urls = listOf("netology.jpg", "sber.jpg", "tcs.jpg", "404.png")
+    private var index = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -28,6 +32,16 @@ class AppActivity : AppCompatActivity() {
 
         requestNotificationsPermission()
         checkGoogleApiAvailability()
+
+//        val url = "http://192.168.1.7:9999/avatars/${urls[index++]}"
+//        Glide.with(binding.iconNetology)
+//            .load(url)
+//            .placeholder(R.drawable.ic_loading_100dp)
+//            .error(R.drawable.ic_error_100dp)
+//            .timeout(10_000)
+//            .circleCrop() // Создаем круглые аватарки
+//            //.transform(RoundedCorners(16)) // круглые аватарки радиус 16px
+//            .into(binding.image)
 
         intent?.let {
             if (it.action != Intent.ACTION_SEND) return@let

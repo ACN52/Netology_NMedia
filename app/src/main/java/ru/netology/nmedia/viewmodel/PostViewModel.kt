@@ -1,6 +1,9 @@
 package ru.netology.nmedia.viewmodel
 
 import android.app.Application
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -48,7 +51,17 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             override fun onError(e: Exception) {
+                // Показываем Toast об ошибке
+                showToast("Ошибка: ${e.message}")
                 _data.postValue(FeedModel(error = true))
+            }
+
+            // Сервер не отвечает
+            // Сообщение в showToast(message) подставляется из класса class PostRepositoryNetworkImpl
+            // из метода fun onFailure в зависимости от ошибки
+            override fun onNetworkError(message: String) {
+                _data.postValue(FeedModel(error = true))
+                showToast(message)
             }
         })
     }
@@ -94,6 +107,13 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: IOException) {
                 _data.postValue(_data.value?.copy(posts = old))
             }
+        }
+    }
+
+    // Функция безопасного отображения Toast из фонового потока в главном UI-потоке
+    private fun showToast(message: String) {
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(getApplication(), message, Toast.LENGTH_LONG).show()
         }
     }
 }
