@@ -45,6 +45,10 @@ class FeedFragment : Fragment() {
                 viewModel.likeById(post.id)
             }
 
+//            override fun onDisLike(post: Post) {
+//                viewModel.unlikeById(post.id)
+//            }
+
             override fun onRemove(post: Post) {
                 viewModel.removeById(post.id)
             }
@@ -62,7 +66,7 @@ class FeedFragment : Fragment() {
             }
 
             override fun onView(post: Post) {
-                TODO("Not yet implemented")
+                viewModel.viewById(post.id)
             }
         })
         binding.recyclerId.adapter = adapter

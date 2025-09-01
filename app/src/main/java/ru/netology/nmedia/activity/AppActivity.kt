@@ -13,12 +13,13 @@ import ru.netology.nmedia.databinding.ActivityAppBinding
 import android.Manifest
 import android.content.pm.PackageManager
 import android.widget.Toast
+import com.bumptech.glide.Glide
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.FirebaseMessaging
 
-
 class AppActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
