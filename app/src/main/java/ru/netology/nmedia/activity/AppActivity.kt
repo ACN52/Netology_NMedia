@@ -19,6 +19,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 
 
 class AppActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
