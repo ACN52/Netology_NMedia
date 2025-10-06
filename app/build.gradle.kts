@@ -77,6 +77,9 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.logging.interceptor)
+    implementation(libs.bundles.lifecycle)
+    implementation(libs.fragment.ktx)
+    implementation(libs.bundles.navigation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
