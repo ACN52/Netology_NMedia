@@ -6,9 +6,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.switchMap
+import kotlinx.coroutines.flow.map
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import okhttp3.Dispatcher
 import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
@@ -40,11 +45,15 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         get() = _state
 
     val data: LiveData<FeedModel> =
-        repository.data.asFlow(). combine(repository.isEmpty().asFlow()) {posts, empty ->
-            FeedModel(posts = posts, empty = empty)
+        repository.data.map{list: List<Post> -> FeedModel(list, list.isEmpty()) }
+            .catch{it.printStackTrace()}
+            .asLiveData(Dispatchers.Default)
 
-        }
-            .asLiveData()
+    val newerCount: LiveData<Int> = data.switchMap {
+        repository.getNewerCount(it.posts.firstOrNull()?.id ?: 0L)
+            .catch { e -> e.printStackTrace() }
+            .asLiveData(Dispatchers.Default)
+    }
 
     val edited = MutableLiveData(empty)
     private val _postCreated = SingleLiveEvent<Unit>()
@@ -65,6 +74,9 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
     // --------------------------
 
+    private val _showNewPostsNotification = MutableLiveData<Boolean>(false)
+    val showNewPostsNotification: LiveData<Boolean> = _showNewPostsNotification
+
     fun loadPosts() {
         viewModelScope.launch {
             _state.value = FeedModelState(loading = true)
@@ -74,6 +86,27 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             } catch (_: Exception) {
                 _state.value = FeedModelState(error = true)
             }
+        }
+    }
+
+    fun loadNewPosts() {
+        viewModelScope.launch {
+            try {
+                repository.makeAllPostsVisible()
+                _showNewPostsNotification.postValue(false)
+            } catch (e: Exception) {
+                _state.value = FeedModelState(error = true)
+            }
+        }
+    }
+
+    fun refreshPosts() = viewModelScope.launch {
+        try {
+            _state.value = FeedModelState(refreshing = true)
+            repository.getAllAsync()
+            _state.value = FeedModelState()
+        } catch (e: Exception) {
+            _state.value = FeedModelState(error = true)
         }
     }
 

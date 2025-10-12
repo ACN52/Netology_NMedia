@@ -67,6 +67,8 @@ dependencies {
     implementation(libs.androidx.room)
     implementation(libs.generativeai)
     implementation(libs.cronet.embedded)
+    implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.androidx.credentials)
     ksp(libs.androidx.room.compiler)
     implementation(platform(libs.firebase))
     implementation(libs.firebase.messaging)

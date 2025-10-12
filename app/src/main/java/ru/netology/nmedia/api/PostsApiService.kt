@@ -2,6 +2,7 @@ package ru.netology.nmedia.api
 
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
@@ -21,7 +22,8 @@ private val logging = HttpLoggingInterceptor().apply {
 
 private val okhttp = OkHttpClient.Builder()
     .addInterceptor(logging)
-    .connectTimeout(13, TimeUnit.SECONDS)
+    .connectTimeout(13, TimeUnit.SECONDS) // время на установление соединения с сервером
+    .readTimeout(30, TimeUnit.SECONDS) // время на получение ответа после установления соединения
     .build()
 
 private val retrofit = Retrofit.Builder()
@@ -34,6 +36,9 @@ private val retrofit = Retrofit.Builder()
 interface PostsApiService {
     @GET("posts")
     suspend fun getAll(): List<Post>
+
+    @GET("posts/{id}/newer")
+    suspend fun getNewer(@Path("id") id: Long): Response<List<Post>>
 
     @GET("posts/{id}")
     suspend fun getById(@Path("id") id: Long): Post

@@ -96,6 +96,29 @@ class FeedFragment : Fragment() {
             findNavController().navigate(R.id.action_feedFragment_to_newPostFragment)
         }
 
+        viewModel.newerCount.observe(viewLifecycleOwner) { state ->
+            println(state)
+        }
+
+        // Наблюдаем за уведомлением о новых постах
+        // ----------------------------------------
+        viewModel.showNewPostsNotification.observe(viewLifecycleOwner) { showNotification ->
+            binding.newPostsNotification.isVisible = showNotification
+        }
+
+        // Обработка нажатия на плашку
+        binding.newPostsNotification.setOnClickListener {
+            viewModel.loadNewPosts()
+            // Плавный скролл к верху
+            binding.recyclerId.smoothScrollToPosition(0)
+        }
+        // ----------------------------------------
+
+        // Swipe экрана
+        binding.swiperefresh.setOnRefreshListener {
+            viewModel.refreshPosts()
+        }
+
         // ДОБАВЛЯЕМ НАБЛЮДЕНИЕ ЗА ОШИБКАМИ ДЛЯ TOAST
         viewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
             errorMessage?.let { message ->

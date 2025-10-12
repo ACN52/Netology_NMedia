@@ -4,7 +4,11 @@ package ru.netology.nmedia.repository
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.map
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import ru.netology.nmedia.api.PostsApi
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.dao.PostDao
@@ -14,29 +18,89 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
 class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
-    override val data: LiveData<List<Post>> = dao.getAll().map {
-        it.map(PostEntity::toDto)
-    }
+
+    // Используем только видимые посты для основного списка
+    override val data = dao.getAllVisible().map { it.map { it.toDto() } }
+
+    // override val data = dao.getAll().map {it.map {it.toDto() }}
 
     // LiveData для передачи ошибок в UI
     private val _errorMessage = MutableLiveData<String?>()
     override val errorMessage: LiveData<String?> = _errorMessage
 
+    private fun handleNetworkError(e: Exception, context: String) {
+        val message = getNetworkErrorMessage(e)
+        Log.e("PostRepositoryNetworkImpl", "Network error in $context: ${e.message}")
+        // Передаем сообщение для Toast
+        _errorMessage.postValue(message)
+    }
+
     override suspend fun getAllAsync() {
         try {
-            val posts = PostsApi.retrofitService.getAll()
-            dao.insert(posts.map(PostEntity::fromDto))
-            _errorMessage.postValue(null) // Очищаем ошибку при успехе
+            Log.d("Network", "Выполнение вызова API для получения сообщений")
+            val posts = PostsApi.retrofitService.getAll() // вызов API
+            Log.d("Network", "Получено ${posts.size} сообщений с сервера")
+            // Сохраняем посты как видимые при первоначальной загрузке
+            dao.insert(posts.map { post ->
+                PostEntity.fromDto(post).copy(isVisible = true)
+            })
+            _errorMessage.postValue(null)
         } catch (e: Exception) {
-            // Создаем локальную переменную с другим именем
-            val message = getNetworkErrorMessage(e)
-            // Просто логируем ошибки
-            Log.e("PostRepositoryNetworkImpl", "Network error in getAllAsync: ${e.message}")
-            // Данные остаются из БД - приложение работает
-            // Передаем сообщение для Toast
-            _errorMessage.postValue(message)
+            Log.e("Network", "Ошибка при получении постов: ${e.message}")
+            handleNetworkError(e, "getAllAsync")
         }
     }
+
+    override fun getNewerCount(id: Long): Flow<Int> = flow {
+        while (true) {
+            delay(10_000L)
+            try {
+                val remotePosts = PostsApi.retrofitService.getAll()
+                val localPosts = dao.getAll().first()
+
+                // Находим только действительно НОВЫЕ посты (которых нет локально)
+                val newPosts = remotePosts.filter { remotePost ->
+                    localPosts.none { it.id == remotePost.id }
+                }
+
+                if (newPosts.isNotEmpty()) {
+                    // Сохраняем только новые посты как невидимые
+                    val newEntities = newPosts.map { post ->
+                        PostEntity.fromDto(post).copy(isVisible = false)
+                    }
+                    dao.insert(newEntities)
+                    emit(newPosts.size)
+                } else {
+                    emit(0)
+                }
+
+                _errorMessage.postValue(null)
+            } catch (e: Exception) {
+                handleNetworkError(e, "getNewerCount")
+                emit(0)
+            }
+        }
+    }
+
+//    override fun getNewerCount(id: Long): Flow<Int> = flow {
+//        while (true) {
+//            delay(10_000L)
+//            try {
+//                val remotePosts = PostsApi.retrofitService.getAll()
+//                val localPosts = dao.getAll().first() // Получаем текущие посты
+//
+//                val newPostsCount = remotePosts.size - localPosts.size
+//                if (newPostsCount > 0) {
+//                    dao.insert(remotePosts.map(PostEntity::fromDto))
+//                    emit(newPostsCount) // Emit количество новых постов
+//                }
+//
+//                _errorMessage.postValue(null)
+//            } catch (e: Exception) {
+//                handleNetworkError(e, "getNewerCount")
+//            }
+//        }
+//    }
 
     override suspend fun likeById(id: Long) {
         try {
@@ -102,6 +166,10 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
 
     override fun clearError() {
         _errorMessage.postValue(null)
+    }
+
+    override suspend fun makeAllPostsVisible() {
+        dao.makeAllVisible()
     }
 
 

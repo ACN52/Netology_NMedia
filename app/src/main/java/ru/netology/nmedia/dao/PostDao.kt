@@ -5,12 +5,14 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import ru.netology.nmedia.entity.PostEntity
 
 @Dao
 interface PostDao {
     @Query("SELECT * FROM posts_room ORDER BY id DESC")
-    fun getAll(): LiveData<List<PostEntity>>
+    fun getAll(): Flow<List<PostEntity>>
 
     // Проверка на пустоту БД
     @Query("SELECT COUNT(*) = 0 FROM posts_room")
@@ -44,4 +46,14 @@ interface PostDao {
 
     @Query("DELETE FROM posts_room WHERE id = :id")
     suspend fun removeById(id: Long)
+
+
+    @Query("SELECT * FROM posts_room WHERE isVisible = 1 ORDER BY id DESC")
+    fun getAllVisible(): Flow<List<PostEntity>>
+
+    @Update
+    suspend fun update(post: PostEntity)
+
+    @Query("UPDATE posts_room SET isVisible = 1")
+    suspend fun makeAllVisible()
 }
