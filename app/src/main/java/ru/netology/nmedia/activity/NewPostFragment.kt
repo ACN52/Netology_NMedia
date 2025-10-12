@@ -6,12 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.snackbar.Snackbar
-import ru.netology.nmedia.R
-import ru.netology.nmedia.activity.FeedFragment.Companion.textArgs
-import ru.netology.nmedia.databinding.AcManagementBinding
+import ru.netology.nmedia.databinding.FragmentNewPostBinding
+import ru.netology.nmedia.utils.AndroidUtils
 import ru.netology.nmedia.utils.StringArg
 import ru.netology.nmedia.viewmodel.PostViewModel
 
@@ -28,55 +25,23 @@ class NewPostFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val binding = AcManagementBinding.inflate(
+        val binding = FragmentNewPostBinding.inflate(
             inflater,
             container,
             false
         )
 
-        // Устанавливаем текст из edited.value (если есть) или из аргументов
-        viewModel.edited.value?.let { post ->
-            if (post.id != 0L) {
-                binding.editTextCreateUpdate.setText(post.content)
-                binding.editTextCreateUpdate.setSelection(post.content.length)
-            }
-        } ?: arguments?.textArgs?.let { text ->
-            binding.editTextCreateUpdate.setText(text)
-            binding.editTextCreateUpdate.setSelection(text.length)
+        arguments?.textArg
+            ?.let(binding.edit::setText)
+
+        binding.buttonFabActivity.setOnClickListener {
+            viewModel.changeContent(binding.edit.text.toString())
+            viewModel.save()
+            AndroidUtils.hideKeyboard(requireView())
         }
-
-        // Отрабатываем кнопку Создать (Create) пост
-        // --------------------
-        binding.buttonCreate.setOnClickListener {
-            if (binding.editTextCreateUpdate.text.isNotBlank()) {
-                val content = binding.editTextCreateUpdate.text.toString()
-                viewModel.changeContent(content)
-                viewModel.save()   // <- Отправка на сервер
-                viewModel.loadPosts()  //  Загружаем посты с Сервера
-            }
-            findNavController().navigateUp()   // <- Закрываем фрагмент
+        viewModel.postCreated.observe(viewLifecycleOwner) {
+            findNavController().navigateUp()
         }
-        // --------------------
-
-        // Отрабатываем кнопку Редактировать (Update) пост
-        // --------------------
-        binding.buttonUpdate.setOnClickListener {
-            val content = binding.editTextCreateUpdate.text.toString()
-            if (content.isNotBlank()) {
-                viewModel.changeContent(content)
-                viewModel.save()
-                findNavController().navigateUp()
-            } else {
-                Snackbar.make(binding.root, R.string.error_empty_content, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(android.R.string.ok) {
-                        findNavController().navigateUp()
-                    }.show()
-            }
-        }
-        // --------------------
-
-
         return binding.root
-
     }
 }
