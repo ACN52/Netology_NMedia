@@ -77,8 +77,6 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
-
     fun save() {
         edited.value?.let {
             _postCreated.value = Unit
@@ -106,6 +104,17 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 repository.likeById(id)
+                _state.value = FeedModelState()
+            } catch (e: Exception) {
+                _state.value = FeedModelState(error = true)
+            }
+        }
+    }
+
+    fun unlikeById(id: Long) {
+        viewModelScope.launch {
+            try {
+                repository.unlikeById(id)
                 _state.value = FeedModelState()
             } catch (e: Exception) {
                 _state.value = FeedModelState(error = true)

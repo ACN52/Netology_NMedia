@@ -51,6 +51,20 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
         }
     }
 
+    override suspend fun unlikeById(id: Long) {
+        try {
+            val updatedPost = PostsApi.retrofitService.unlikeById(id)
+            dao.insert(PostEntity.fromDto(updatedPost))
+            _errorMessage.postValue(null) // Очищаем ошибку при успехе
+        } catch (e: Exception) {
+            val message = getNetworkErrorMessage(e)
+            Log.e("PostRepositoryNetworkImpl", "Network error in unlikeById: ${e.message}")
+            // Данные остаются из БД - приложение работает
+            _errorMessage.postValue(message)
+        }
+    }
+
+
     override suspend fun removeById(id: Long) {
         try {
             PostsApi.retrofitService.removeById(id)
@@ -61,10 +75,6 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
             Log.e("PostRepositoryNetworkImpl", "Network error in removeById: ${e.message}")
             _errorMessage.postValue(message)
         }
-    }
-
-    override suspend fun unlikeById(id: Long) {
-        TODO("Not yet implemented")
     }
 
     override suspend fun shareById(id: Long) {

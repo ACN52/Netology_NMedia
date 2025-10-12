@@ -46,7 +46,12 @@ class FeedFragment : Fragment() {
             }
 
             override fun onLike(post: Post) {
-                // TODO
+                // ВЫЗЫВАЕМ СООТВЕТСТВУЮЩИЙ МЕТОД В ЗАВИСИМОСТИ ОТ ТЕКУЩЕГО СОСТОЯНИЯ
+                if (post.likedByMe) {
+                    viewModel.unlikeById(post.id)   // Если уже лайкнуто - убираем лайк
+                } else {
+                    viewModel.likeById(post.id)     // Если не лайкнуто - ставим лайк
+                }
             }
 
             override fun onRemove(post: Post) {
