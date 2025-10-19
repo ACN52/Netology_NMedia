@@ -38,7 +38,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
     override suspend fun getAllAsync() {
         try {
             Log.d("Network", "Выполнение вызова API для получения сообщений")
-            val posts = PostsApi.retrofitService.getAll() // вызов API
+            val posts = PostsApi.posts.getAll() // вызов API
             Log.d("Network", "Получено ${posts.size} сообщений с сервера")
             // Сохраняем посты как видимые при первоначальной загрузке
             dao.insert(posts.map { post ->
@@ -56,7 +56,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
             delay(10_000L)
             try {
                 // ИСПОЛЬЗУЕМ ОПТИМИЗИРОВАННЫЙ МЕТОД ДЛЯ ПОЛУЧЕНИЯ ТОЛЬКО НОВЫХ ПОСТОВ
-                val response = PostsApi.retrofitService.getNewer(id)
+                val response = PostsApi.posts.getNewer(id)
 
                 if (response.isSuccessful) {
                     val newPosts = response.body() ?: emptyList()
@@ -87,7 +87,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun likeById(id: Long) {
         try {
-            val updatedPost = PostsApi.retrofitService.likeById(id)
+            val updatedPost = PostsApi.posts.likeById(id)
             dao.insert(PostEntity.fromDto(updatedPost))
             _errorMessage.postValue(null) // Очищаем ошибку при успехе
         } catch (e: Exception) {
@@ -100,7 +100,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun unlikeById(id: Long) {
         try {
-            val updatedPost = PostsApi.retrofitService.unlikeById(id)
+            val updatedPost = PostsApi.posts.unlikeById(id)
             dao.insert(PostEntity.fromDto(updatedPost))
             _errorMessage.postValue(null) // Очищаем ошибку при успехе
         } catch (e: Exception) {
@@ -114,7 +114,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun removeById(id: Long) {
         try {
-            PostsApi.retrofitService.removeById(id)
+            PostsApi.posts.removeById(id)
             dao.removeById(id)
             _errorMessage.postValue(null)
         } catch (e: Exception) {
@@ -134,7 +134,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun save(post: Post): Post {
         try {
-            val postFromServer = PostsApi.retrofitService.save(post)
+            val postFromServer = PostsApi.posts.save(post)
             dao.insert(PostEntity.fromDto(postFromServer))
             return postFromServer
         } catch (e: Exception) {

@@ -7,12 +7,14 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
 import ru.netology.nmedia.BuildConfig
+import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.viewmodel.AuthData
 import java.util.concurrent.TimeUnit
 
-private const val BASE_URL = "http://192.168.1.8:9999/api/slow/"
+private const val BASE_URL = "http://192.168.1.8:9999/api/"
 
-// Добавляем логирование
+// Общая конфигурация Retrofit
 // ---------------------
 private val logging = HttpLoggingInterceptor().apply {
     if (BuildConfig.DEBUG) {
@@ -22,8 +24,16 @@ private val logging = HttpLoggingInterceptor().apply {
 
 private val okhttp = OkHttpClient.Builder()
     .addInterceptor(logging)
-    .connectTimeout(13, TimeUnit.SECONDS) // время на установление соединения с сервером
-    .readTimeout(30, TimeUnit.SECONDS) // время на получение ответа после установления соединения
+    .addInterceptor { chain ->
+        val token = AppAuth.getInstance().authStateFlow.value.token
+        val requestBuilder = chain.request().newBuilder()
+
+        if (!token.isNullOrBlank()) {
+            requestBuilder.addHeader("Authorization", "Bearer $token") // ← Добавьте Bearer
+        }
+
+        return@addInterceptor chain.proceed(requestBuilder.build())
+    }
     .build()
 
 private val retrofit = Retrofit.Builder()
@@ -33,37 +43,52 @@ private val retrofit = Retrofit.Builder()
     .build()
 // ---------------------
 
+// Сервис для постов
 interface PostsApiService {
-    @GET("posts")
+    @GET("slow/posts")
     suspend fun getAll(): List<Post>
 
-    @GET("posts/{id}/newer")
+    @GET("slow/posts/{id}/newer")
     suspend fun getNewer(@Path("id") id: Long): Response<List<Post>>
 
-    @GET("posts/{id}")
+    @GET("slow/posts/{id}")
     suspend fun getById(@Path("id") id: Long): Post
 
-    @POST("posts")
+    @POST("slow/posts")
     suspend fun save(@Body post: Post): Post
 
-    @POST("posts/{id}/likes")
+    @POST("slow/posts/{id}/likes")
     suspend fun likeById(@Path("id") id: Long): Post
 
-    @DELETE("posts/{id}/likes")
+    @DELETE("slow/posts/{id}/likes")
     suspend fun unlikeById(@Path("id") id: Long): Post
 
-    @DELETE("posts/{id}")
+    @DELETE("slow/posts/{id}")
     suspend fun removeById(@Path("id") id: Long)
 
-    @POST("posts/{id}/shares")
+    @POST("slow/posts/{id}/shares")
     suspend fun shareById(@Path("id") id: Long)
 
-    @POST("posts/{id}/views")
+    @POST("slow/posts/{id}/views")
     suspend fun viewById(@Path("id") id: Long)
 }
 
+// Сервис для аутентификации
+interface AuthApiService {
+    @FormUrlEncoded
+    @POST("users/authentication")
+    suspend fun authenticate(
+        @Field("login") login: String,
+        @Field("pass") pass: String
+    ): Response<AuthData>
+}
+
 object PostsApi {
-    val retrofitService: PostsApiService by lazy {
+    val posts: PostsApiService by lazy {
         retrofit.create(PostsApiService::class.java)
+    }
+
+    val auth: AuthApiService by lazy {
+        retrofit.create(AuthApiService::class.java)
     }
 }

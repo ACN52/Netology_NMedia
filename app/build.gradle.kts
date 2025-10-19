@@ -29,9 +29,11 @@ android {
                 "proguard-rules.pro"
             )
             manifestPlaceholders["usesCleartextTraffic"] = false
+            buildConfigField("String", "BASE_URL", "\"https://netomedia.ru\"")
         }
         debug {
             manifestPlaceholders["usesCleartextTraffic"] = true
+            buildConfigField("String", "BASE_URL", "\"https://netomedia.ru\"")
         }
     }
 
@@ -69,6 +71,7 @@ dependencies {
     implementation(libs.cronet.embedded)
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.androidx.credentials)
+    implementation(libs.play.services.fido)
     ksp(libs.androidx.room.compiler)
     implementation(platform(libs.firebase))
     implementation(libs.firebase.messaging)

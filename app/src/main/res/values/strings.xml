@@ -34,5 +34,11 @@
     <string name="retry_loading">retry_loading</string>
     <string name="new_posts_available">new_posts</string>
     <string name="arrow_new_posts" translatable="false">arrow_new_posts</string>
+    <string name="sign_in">sign_in</string>
+    <string name="sign_up">sign_up</string>
+    <string name="sign_out">sign_out</string>
+    <string name="login" translatable="false">login</string>
+    <string name="password" translatable="false">password</string>
+
 
 </resources>

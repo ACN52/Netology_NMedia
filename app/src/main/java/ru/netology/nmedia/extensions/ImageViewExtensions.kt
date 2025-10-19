@@ -4,7 +4,7 @@ import android.widget.ImageView
 import com.bumptech.glide.Glide
 import ru.netology.nmedia.R
 
-fun ImageView.loadAvatar(avatarPath: String?) {
+fun ImageView.loadAvatar(avatarPath: String) {
     if (avatarPath.isNullOrEmpty()) {
         println("Проверьте путь к аватаркам")
         setImageResource(R.drawable.ic_error_24)

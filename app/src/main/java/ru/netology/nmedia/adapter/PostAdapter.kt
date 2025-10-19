@@ -1,6 +1,7 @@
 package ru.netology.nmedia.adapter
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
@@ -9,8 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.Post
-import ru.netology.nmedia.extensions.loadAvatar
 import ru.netology.nmedia.formatNumberShort
+import ru.netology.nmedia.view.loadCircleCrop
+import ru.netology.nmedia.BuildConfig
 
 interface OnInteractorListener {
     fun onLike(post: Post)
@@ -49,7 +51,7 @@ class PostViewHolder(
         //textVideo.text = post.video
 
         // Загружаем аватарки
-        iconNetology.loadAvatar(post.authorAvatar)
+        iconNetology.loadCircleCrop("${BuildConfig.BASE_URL}/avatars/${post.authorAvatar}")
 
         // Обновление UI на основе текущего состояния
         imageHeart.apply {
@@ -60,6 +62,8 @@ class PostViewHolder(
         imageHeart.text = formatNumberShort(post.likesCount)
         imageShare.text = formatNumberShort(post.sharesCount)
         imageLook.text = formatNumberShort(post.looksCount)
+
+        iconMenu.visibility = if (post.ownedByMe) View.VISIBLE else View.INVISIBLE
 
         // Обработчики кликов
         // ==================

@@ -4,16 +4,16 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.switchMap
 import kotlinx.coroutines.flow.map
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
-import okhttp3.Dispatcher
+import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
@@ -31,7 +31,9 @@ private val empty = Post(
     likesCount = 0,
     sharesCount = 0,
     looksCount = 0,
-    likedByMe = false
+    likedByMe = false,
+    authorAvatar = false,
+    authorId = 0
 )
 
 class PostViewModel(application: Application) : AndroidViewModel(application) {
@@ -44,10 +46,23 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     val state: LiveData<FeedModelState>
         get() = _state
 
-    val data: LiveData<FeedModel> =
-        repository.data.map{list: List<Post> -> FeedModel(list, list.isEmpty()) }
-            .catch{it.printStackTrace()}
-            .asLiveData(Dispatchers.Default)
+    @ExperimentalCoroutinesApi
+    val data: LiveData<FeedModel> = AppAuth.getInstance()
+        .authStateFlow
+        .flatMapLatest { (myId, _) ->
+            repository.data
+                .map { posts ->
+                    FeedModel(
+                        posts.map { it.copy(ownedByMe = it.authorId == myId) },
+                        posts.isEmpty()
+                    )
+                }
+        }.asLiveData(Dispatchers.Default)
+
+//    val data: LiveData<FeedModel> =
+//        repository.data.map{list: List<Post> -> FeedModel(list, list.isEmpty()) }
+//            .catch{it.printStackTrace()}
+//            .asLiveData(Dispatchers.Default)
 
     val newerCount: LiveData<Int> = data.switchMap {
         repository.getNewerCount(it.posts.firstOrNull()?.id ?: 0L)
