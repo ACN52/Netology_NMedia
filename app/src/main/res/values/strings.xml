@@ -32,5 +32,7 @@
     <string name="empty_posts">empty_posts</string>
     <string name="error_loading">error_loading</string>
     <string name="retry_loading">retry_loading</string>
+    <string name="new_posts_available">new_posts</string>
+    <string name="arrow_new_posts" translatable="false">arrow_new_posts</string>
 
 </resources>
