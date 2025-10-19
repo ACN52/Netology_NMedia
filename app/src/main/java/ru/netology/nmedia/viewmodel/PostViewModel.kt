@@ -92,13 +92,26 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     fun loadNewPosts() {
         viewModelScope.launch {
             try {
+                _state.value = FeedModelState(loading = true)
                 repository.makeAllPostsVisible()
                 _showNewPostsNotification.postValue(false)
+                _state.value = FeedModelState()
             } catch (e: Exception) {
                 _state.value = FeedModelState(error = true)
             }
         }
     }
+
+//    fun loadNewPosts() {
+//        viewModelScope.launch {
+//            try {
+//                repository.makeAllPostsVisible()
+//                _showNewPostsNotification.postValue(false)
+//            } catch (e: Exception) {
+//                _state.value = FeedModelState(error = true)
+//            }
+//        }
+//    }
 
     fun refreshPosts() = viewModelScope.launch {
         try {

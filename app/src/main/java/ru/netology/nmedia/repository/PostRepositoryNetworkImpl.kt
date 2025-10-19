@@ -55,22 +55,25 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
         while (true) {
             delay(10_000L)
             try {
-                val remotePosts = PostsApi.retrofitService.getAll()
-                val localPosts = dao.getAll().first()
+                // ИСПОЛЬЗУЕМ ОПТИМИЗИРОВАННЫЙ МЕТОД ДЛЯ ПОЛУЧЕНИЯ ТОЛЬКО НОВЫХ ПОСТОВ
+                val response = PostsApi.retrofitService.getNewer(id)
 
-                // Находим только действительно НОВЫЕ посты (которых нет локально)
-                val newPosts = remotePosts.filter { remotePost ->
-                    localPosts.none { it.id == remotePost.id }
-                }
+                if (response.isSuccessful) {
+                    val newPosts = response.body() ?: emptyList()
 
-                if (newPosts.isNotEmpty()) {
-                    // Сохраняем только новые посты как невидимые
-                    val newEntities = newPosts.map { post ->
-                        PostEntity.fromDto(post).copy(isVisible = false)
+                    if (newPosts.isNotEmpty()) {
+                        Log.d("Network", "Найдено ${newPosts.size} новых постов")
+                        // Сохраняем только новые посты как невидимые
+                        val newEntities = newPosts.map { post ->
+                            PostEntity.fromDto(post).copy(isVisible = false)
+                        }
+                        dao.insert(newEntities)
+                        emit(newPosts.size)
+                    } else {
+                        emit(0)
                     }
-                    dao.insert(newEntities)
-                    emit(newPosts.size)
                 } else {
+                    Log.e("Network", "Ошибка HTTP при получении новых постов: ${response.code()}")
                     emit(0)
                 }
 
@@ -81,26 +84,6 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
             }
         }
     }
-
-//    override fun getNewerCount(id: Long): Flow<Int> = flow {
-//        while (true) {
-//            delay(10_000L)
-//            try {
-//                val remotePosts = PostsApi.retrofitService.getAll()
-//                val localPosts = dao.getAll().first() // Получаем текущие посты
-//
-//                val newPostsCount = remotePosts.size - localPosts.size
-//                if (newPostsCount > 0) {
-//                    dao.insert(remotePosts.map(PostEntity::fromDto))
-//                    emit(newPostsCount) // Emit количество новых постов
-//                }
-//
-//                _errorMessage.postValue(null)
-//            } catch (e: Exception) {
-//                handleNetworkError(e, "getNewerCount")
-//            }
-//        }
-//    }
 
     override suspend fun likeById(id: Long) {
         try {
@@ -152,11 +135,8 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
     override suspend fun save(post: Post): Post {
         try {
             val postFromServer = PostsApi.retrofitService.save(post)
-
             dao.insert(PostEntity.fromDto(postFromServer))
-
             return postFromServer
-
         } catch (e: Exception) {
             throw UnknownError(getNetworkErrorMessage(e))
         }
