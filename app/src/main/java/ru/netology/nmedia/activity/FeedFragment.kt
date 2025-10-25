@@ -114,7 +114,7 @@ class FeedFragment : Fragment() {
         // ----------------------------------------
 
         // Swipe экрана
-        binding.swiperefresh.setOnRefreshListener {
+        binding.swipeRefresh.setOnRefreshListener {
             viewModel.refreshPosts()
         }
 

@@ -29,7 +29,7 @@ private val okhttp = OkHttpClient.Builder()
         val requestBuilder = chain.request().newBuilder()
 
         if (!token.isNullOrBlank()) {
-            requestBuilder.addHeader("Authorization", "Bearer $token") // ← Добавьте Bearer
+            requestBuilder.addHeader("Authorization", token)
         }
 
         return@addInterceptor chain.proceed(requestBuilder.build())
