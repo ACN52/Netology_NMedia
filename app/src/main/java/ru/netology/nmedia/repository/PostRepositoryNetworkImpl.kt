@@ -1,118 +1,166 @@
 package ru.netology.nmedia.repository
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import okhttp3.RequestBody.Companion.toRequestBody
+
+import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import ru.netology.nmedia.api.PostsApi
 import ru.netology.nmedia.dto.Post
-import java.io.IOException
-import java.util.concurrent.TimeUnit
+import ru.netology.nmedia.dao.PostDao
+import ru.netology.nmedia.entity.PostEntity
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
+class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
 
-class PostRepositoryNetworkImpl: PostRepository {
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .build()
-    private val gson = Gson()
-    private val typeToken = object : TypeToken<List<Post>>() {}
+    // Используем только видимые посты для основного списка
+    override val data = dao.getAllVisible().map { it.map { it.toDto() } }
 
-    companion object {
-        private const val BASE_URL = "http://192.168.1.7:9999"
-        private val jsonType = "application/json".toMediaType()
+    // override val data = dao.getAll().map {it.map {it.toDto() }}
+
+    // LiveData для передачи ошибок в UI
+    private val _errorMessage = MutableLiveData<String?>()
+    override val errorMessage: LiveData<String?> = _errorMessage
+
+    private fun handleNetworkError(e: Exception, context: String) {
+        val message = getNetworkErrorMessage(e)
+        Log.e("PostRepositoryNetworkImpl", "Network error in $context: ${e.message}")
+        // Передаем сообщение для Toast
+        _errorMessage.postValue(message)
     }
 
-    override fun getAll(): List<Post> {
-        val request: Request = Request.Builder()
-            .url("${BASE_URL}/api/slow/posts")
-            .build()
-
-        return client.newCall(request)
-            .execute()
-            .let { it.body?.string() ?: throw RuntimeException("body is null") }
-            .let {
-                gson.fromJson(it, typeToken.type)
-            }
-    }
-
-    override fun getAllAsync(callback: PostRepository.GetAllCallback) {
-        val request: Request = Request.Builder()
-            .url("${BASE_URL}/api/slow/posts")
-            .build()
-
-        client.newCall(request)
-            .enqueue(object : Callback {
-                override fun onResponse(call: Call, response: Response) {
-                    val body = response.body.string()
-                    try {
-                        callback.onSuccess(gson.fromJson(body, typeToken.type))
-                    } catch (e: Exception) {
-                        callback.onError(e)
-                    }
-                }
-
-                override fun onFailure(call: Call, e: IOException) {
-                    callback.onError(e)
-                }
+    override suspend fun getAllAsync() {
+        try {
+            Log.d("Network", "Выполнение вызова API для получения сообщений")
+            val posts = PostsApi.posts.getAll() // вызов API
+            Log.d("Network", "Получено ${posts.size} сообщений с сервера")
+            // Сохраняем посты как видимые при первоначальной загрузке
+            dao.insert(posts.map { post ->
+                PostEntity.fromDto(post).copy(isVisible = true)
             })
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            Log.e("Network", "Ошибка при получении постов: ${e.message}")
+            handleNetworkError(e, "getAllAsync")
+        }
     }
 
-    override fun likeById(id: Long): Post {
-        val request: Request = Request.Builder()
-            .post(ByteArray(0).toRequestBody(null))
-            .url("${BASE_URL}/api/posts/$id/likes")
-            .build()
+    override fun getNewerCount(id: Long): Flow<Int> = flow {
+        while (true) {
+            delay(10_000L)
+            try {
+                // ИСПОЛЬЗУЕМ ОПТИМИЗИРОВАННЫЙ МЕТОД ДЛЯ ПОЛУЧЕНИЯ ТОЛЬКО НОВЫХ ПОСТОВ
+                val response = PostsApi.posts.getNewer(id)
 
-        return client.newCall(request)
-            .execute()
-            .let { it.body?.string() ?: throw RuntimeException("body is null") }
-            .let { gson.fromJson(it, Post::class.java) }
+                if (response.isSuccessful) {
+                    val newPosts = response.body() ?: emptyList()
+
+                    if (newPosts.isNotEmpty()) {
+                        Log.d("Network", "Найдено ${newPosts.size} новых постов")
+                        // Сохраняем только новые посты как невидимые
+                        val newEntities = newPosts.map { post ->
+                            PostEntity.fromDto(post).copy(isVisible = false)
+                        }
+                        dao.insert(newEntities)
+                        emit(newPosts.size)
+                    } else {
+                        emit(0)
+                    }
+                } else {
+                    Log.e("Network", "Ошибка HTTP при получении новых постов: ${response.code()}")
+                    emit(0)
+                }
+
+                _errorMessage.postValue(null)
+            } catch (e: Exception) {
+                handleNetworkError(e, "getNewerCount")
+                emit(0)
+            }
+        }
     }
 
-    override fun unlikeById(id: Long): Post {
-        val request: Request = Request.Builder()
-            .delete()
-            .url("${BASE_URL}/api/posts/$id/likes")
-            .build()
+    override suspend fun likeById(id: Long) {
+        try {
+            val updatedPost = PostsApi.posts.likeById(id)
+            dao.insert(PostEntity.fromDto(updatedPost))
+            _errorMessage.postValue(null) // Очищаем ошибку при успехе
+        } catch (e: Exception) {
+            val message = getNetworkErrorMessage(e)
+            Log.e("PostRepositoryNetworkImpl", "Network error in likeById: ${e.message}")
+            // Данные остаются из БД - приложение работает
+            _errorMessage.postValue(message)
+        }
+    }
 
-        return client.newCall(request)
-            .execute()
-            .let { it.body?.string() ?: throw RuntimeException("body is null") }
-            .let { gson.fromJson(it, Post::class.java) }
+    override suspend fun unlikeById(id: Long) {
+        try {
+            val updatedPost = PostsApi.posts.unlikeById(id)
+            dao.insert(PostEntity.fromDto(updatedPost))
+            _errorMessage.postValue(null) // Очищаем ошибку при успехе
+        } catch (e: Exception) {
+            val message = getNetworkErrorMessage(e)
+            Log.e("PostRepositoryNetworkImpl", "Network error in unlikeById: ${e.message}")
+            // Данные остаются из БД - приложение работает
+            _errorMessage.postValue(message)
+        }
     }
 
 
-    override fun shareById(id: Long) {
+    override suspend fun removeById(id: Long) {
+        try {
+            PostsApi.posts.removeById(id)
+            dao.removeById(id)
+            _errorMessage.postValue(null)
+        } catch (e: Exception) {
+            val message = getNetworkErrorMessage(e)
+            Log.e("PostRepositoryNetworkImpl", "Network error in removeById: ${e.message}")
+            _errorMessage.postValue(message)
+        }
+    }
+
+    override suspend fun shareById(id: Long) {
         TODO("Not yet implemented")
     }
 
-    override fun viewById(id: Long) {
+    override suspend fun viewById(id: Long) {
         TODO("Not yet implemented")
     }
 
-    override fun save(post: Post) {
-        val request: Request = Request.Builder()
-            .post(gson.toJson(post).toRequestBody(jsonType))
-            .url("${BASE_URL}/api/slow/posts")
-            .build()
-
-        client.newCall(request)
-            .execute()
-            .close()
+    override suspend fun save(post: Post): Post {
+        try {
+            val postFromServer = PostsApi.posts.save(post)
+            dao.insert(PostEntity.fromDto(postFromServer))
+            return postFromServer
+        } catch (e: Exception) {
+            throw UnknownError(getNetworkErrorMessage(e))
+        }
     }
 
-    override fun removeById(id: Long) {
-        val request: Request = Request.Builder()
-            .delete()
-            .url("${BASE_URL}/api/slow/posts/$id")
-            .build()
+    override fun isEmpty()= dao.isEmpty()
 
-        client.newCall(request)
-            .execute()
-            .close()
+    override fun clearError() {
+        _errorMessage.postValue(null)
+    }
+
+    override suspend fun makeAllPostsVisible() {
+        dao.makeAllVisible()
+    }
+
+
+    private fun getNetworkErrorMessage(t: Throwable): String {
+        return when (t) {
+            is SocketTimeoutException -> "Таймаут соединения с сервером"
+            is ConnectException -> "Нет подключения к интернету"
+            is UnknownHostException -> "Сервер не найден"
+            else -> "Сервер не отвечает"
+        }
     }
 }
+
+
