@@ -7,18 +7,22 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nmedia.databinding.FragmentNewPostBinding
 import ru.netology.nmedia.utils.AndroidUtils
 import ru.netology.nmedia.utils.StringArg
 import ru.netology.nmedia.viewmodel.PostViewModel
 
+@AndroidEntryPoint
 class NewPostFragment : Fragment() {
 
     companion object {
         var Bundle.textArg: String? by StringArg
     }
 
-    private val viewModel: PostViewModel by activityViewModels()
+    private val viewModel: PostViewModel by activityViewModels(
+
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater,

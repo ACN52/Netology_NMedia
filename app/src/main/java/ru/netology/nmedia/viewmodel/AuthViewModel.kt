@@ -5,21 +5,28 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import ru.netology.nmedia.api.PostsApi
+import ru.netology.nmedia.api.AuthApiService
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.auth.AuthState
 
-class AuthViewModel : ViewModel() {
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+
+    private val appAuth: AppAuth,
+    private val authApiService: AuthApiService
+) : ViewModel() {
 
     // Для наблюдения за состоянием авторизации в приложении
-    val data: LiveData<AuthState> = AppAuth.getInstance()
+    val data: LiveData<AuthState> = appAuth
         .authStateFlow
         .asLiveData(Dispatchers.Default)
 
     val authenticated: Boolean
-        get() = AppAuth.getInstance().authStateFlow.value.id != 0L
+        get() = appAuth.authStateFlow.value.id != 0L
 
     // Для процесса аутентификации (логин)
     private val _authProcessState = MutableLiveData<AuthProcessState>()
@@ -30,11 +37,11 @@ class AuthViewModel : ViewModel() {
             _authProcessState.value = AuthProcessState.Loading
             try {
 
-                val response = PostsApi.auth.authenticate(login, password)
+                val response = authApiService.authenticate(login, password)
 
                 if (response.isSuccessful && response.body() != null) {
                     val authData = response.body()!!
-                    AppAuth.getInstance().setAuth(authData.id, authData.token)
+                    appAuth.setAuth(authData.id, authData.token)
                     _authProcessState.value = AuthProcessState.Success(authData)
                 } else {
                     _authProcessState.value = AuthProcessState.Error("Authentication failed: ${response.code()}")

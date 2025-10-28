@@ -21,19 +21,29 @@ import androidx.activity.viewModels
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.FirebaseMessaging
+import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.viewmodel.AuthViewModel
+import javax.inject.Inject
 
-
+@AndroidEntryPoint
 class AppActivity : AppCompatActivity() {
 
-    private val viewModel: AuthViewModel by viewModels()
+    @Inject
+    lateinit var appAuth: AppAuth
+
+    @Inject
+    lateinit var firebaseMessaging: FirebaseMessaging
+
+    @Inject
+    lateinit var googleApiAvailability: GoogleApiAvailability
+
+    private val viewModel: AuthViewModel by viewModels(
+
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ИНИЦИАЛИЗАЦИЯ AppAuth
-        AppAuth.initApp(this)
 
         enableEdgeToEdge()
 
@@ -88,19 +98,19 @@ class AppActivity : AppCompatActivity() {
                         findNavController(R.id.nav_host_fragment).navigate(
                             R.id.action_to_auth_fragment
                         )
-                        AppAuth.getInstance().setAuth(5, "x-token")
+                        appAuth.setAuth(5, "x-token")
                         true
                     }
 
                     R.id.signup -> {
                         // TODO: just hardcode it, implementation must be in homework
-                        AppAuth.getInstance().setAuth(5, "x-token")
+                        appAuth.setAuth(5, "x-token")
                         true
                     }
 
                     R.id.signout -> {
                         // TODO: just hardcode it, implementation must be in homework
-                        AppAuth.getInstance().removeAuth()
+                        appAuth.removeAuth()
                         true
                     }
 
@@ -140,8 +150,9 @@ class AppActivity : AppCompatActivity() {
             Toast.makeText(this@AppActivity, R.string.google_play_unavailable, Toast.LENGTH_LONG).show()
         }
 
-        FirebaseMessaging.getInstance().token.addOnSuccessListener {
-            println(it)
+        // Используем внедренную зависимость FirebaseMessaging
+        firebaseMessaging.token.addOnSuccessListener { token ->
+            println(token)
         }
     }
 

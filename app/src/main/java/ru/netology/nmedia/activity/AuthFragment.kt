@@ -8,11 +8,17 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.databinding.FragmentAuthBinding
 import ru.netology.nmedia.viewmodel.AuthViewModel
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AuthFragment : Fragment() {
+
+    @Inject
+    lateinit var appAuth: AppAuth
 
     private var _binding: FragmentAuthBinding? = null
     private val binding get() = _binding!!
@@ -52,7 +58,7 @@ class AuthFragment : Fragment() {
                 is AuthViewModel.AuthProcessState.Success -> {
                     showLoading(false)
                     // Сохраняем авторизацию
-                    AppAuth.getInstance().setAuth(state.authData.id, state.authData.token)
+                    appAuth.setAuth(state.authData.id, state.authData.token)
                     // Возвращаемся назад
                     findNavController().popBackStack()
                 }

@@ -1,25 +1,24 @@
 package ru.netology.nmedia.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.switchMap
 import kotlinx.coroutines.flow.map
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import ru.netology.nmedia.auth.AppAuth
-import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.repository.PostRepository
-import ru.netology.nmedia.repository.PostRepositoryNetworkImpl
 import ru.netology.nmedia.util.SingleLiveEvent
 
 
@@ -36,18 +35,18 @@ private val empty = Post(
     authorId = 0
 )
 
-class PostViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository: PostRepository = PostRepositoryNetworkImpl(
-        dao = AppDb.getInstance(application).postDao
-    )
+@HiltViewModel
+class PostViewModel @Inject constructor(
+    private val repository: PostRepository,
+    appAuth: AppAuth
+    ) : ViewModel() {
 
     private val _state = MutableLiveData(FeedModelState())
     val state: LiveData<FeedModelState>
         get() = _state
 
     @ExperimentalCoroutinesApi
-    val data: LiveData<FeedModel> = AppAuth.getInstance()
+    val data: LiveData<FeedModel> = appAuth
         .authStateFlow
         .flatMapLatest { (myId, _) ->
             repository.data
@@ -58,11 +57,6 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
         }.asLiveData(Dispatchers.Default)
-
-//    val data: LiveData<FeedModel> =
-//        repository.data.map{list: List<Post> -> FeedModel(list, list.isEmpty()) }
-//            .catch{it.printStackTrace()}
-//            .asLiveData(Dispatchers.Default)
 
     val newerCount: LiveData<Int> = data.switchMap {
         repository.getNewerCount(it.posts.firstOrNull()?.id ?: 0L)
@@ -116,17 +110,6 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-
-//    fun loadNewPosts() {
-//        viewModelScope.launch {
-//            try {
-//                repository.makeAllPostsVisible()
-//                _showNewPostsNotification.postValue(false)
-//            } catch (e: Exception) {
-//                _state.value = FeedModelState(error = true)
-//            }
-//        }
-//    }
 
     fun refreshPosts() = viewModelScope.launch {
         try {

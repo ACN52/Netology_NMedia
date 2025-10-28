@@ -4,12 +4,12 @@ package ru.netology.nmedia.repository
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import javax.inject.Inject
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import ru.netology.nmedia.api.PostsApi
+import ru.netology.nmedia.api.PostsApiService
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.dao.PostDao
 import ru.netology.nmedia.entity.PostEntity
@@ -17,7 +17,10 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
-class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
+class PostRepositoryNetworkImpl @Inject constructor(
+    private val dao: PostDao,
+    private val apiService: PostsApiService
+) : PostRepository {
 
     // Используем только видимые посты для основного списка
     override val data = dao.getAllVisible().map { it.map { it.toDto() } }
@@ -38,7 +41,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
     override suspend fun getAllAsync() {
         try {
             Log.d("Network", "Выполнение вызова API для получения сообщений")
-            val posts = PostsApi.posts.getAll() // вызов API
+            val posts = apiService.getAll() // вызов API
             Log.d("Network", "Получено ${posts.size} сообщений с сервера")
             // Сохраняем посты как видимые при первоначальной загрузке
             dao.insert(posts.map { post ->
@@ -56,7 +59,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
             delay(10_000L)
             try {
                 // ИСПОЛЬЗУЕМ ОПТИМИЗИРОВАННЫЙ МЕТОД ДЛЯ ПОЛУЧЕНИЯ ТОЛЬКО НОВЫХ ПОСТОВ
-                val response = PostsApi.posts.getNewer(id)
+                val response = apiService.getNewer(id)
 
                 if (response.isSuccessful) {
                     val newPosts = response.body() ?: emptyList()
@@ -87,7 +90,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun likeById(id: Long) {
         try {
-            val updatedPost = PostsApi.posts.likeById(id)
+            val updatedPost = apiService.likeById(id)
             dao.insert(PostEntity.fromDto(updatedPost))
             _errorMessage.postValue(null) // Очищаем ошибку при успехе
         } catch (e: Exception) {
@@ -100,7 +103,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun unlikeById(id: Long) {
         try {
-            val updatedPost = PostsApi.posts.unlikeById(id)
+            val updatedPost = apiService.unlikeById(id)
             dao.insert(PostEntity.fromDto(updatedPost))
             _errorMessage.postValue(null) // Очищаем ошибку при успехе
         } catch (e: Exception) {
@@ -114,7 +117,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun removeById(id: Long) {
         try {
-            PostsApi.posts.removeById(id)
+            apiService.removeById(id)
             dao.removeById(id)
             _errorMessage.postValue(null)
         } catch (e: Exception) {
@@ -134,7 +137,7 @@ class PostRepositoryNetworkImpl(private val dao: PostDao) : PostRepository {
 
     override suspend fun save(post: Post): Post {
         try {
-            val postFromServer = PostsApi.posts.save(post)
+            val postFromServer = apiService.save(post)
             dao.insert(PostEntity.fromDto(postFromServer))
             return postFromServer
         } catch (e: Exception) {

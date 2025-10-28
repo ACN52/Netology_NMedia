@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.hilt.android)
 }
 
 android {
@@ -66,13 +67,13 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-    implementation(libs.androidx.room)
+    //implementation(libs.androidx.room)
     implementation(libs.generativeai)
     implementation(libs.cronet.embedded)
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.androidx.credentials)
     implementation(libs.play.services.fido)
-    ksp(libs.androidx.room.compiler)
+    //ksp(libs.androidx.room.compiler)
     implementation(platform(libs.firebase))
     implementation(libs.firebase.messaging)
     implementation(libs.play.services)
@@ -85,6 +86,13 @@ dependencies {
     implementation(libs.bundles.lifecycle)
     implementation(libs.fragment.ktx)
     implementation(libs.bundles.navigation)
+    implementation(libs.bundles.navigation)
+    //implementation(libs.bundles.hilt)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
