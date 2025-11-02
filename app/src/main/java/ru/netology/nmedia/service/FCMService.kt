@@ -12,17 +12,24 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nmedia.R
+import ru.netology.nmedia.auth.AppAuth
+import javax.inject.Inject
 import kotlin.random.Random
 
 // Не забываем Сервис регистрировать в Manifest`е   !!!
 
+@AndroidEntryPoint
 class FCMService : FirebaseMessagingService() {
 
     private val action = "action"
     private val content = "content"
     private val channelId = "remote"
     private val gson = Gson()
+
+    @Inject
+    lateinit var appAuth: AppAuth
 
     // Регистрируем канал Сервиса
     override fun onCreate() {
@@ -42,6 +49,7 @@ class FCMService : FirebaseMessagingService() {
     // Получаем токен устройства
     override fun onNewToken(token: String) {
         println("Наш токен= $token")
+        //appAuth.sendPushToken(token)
     }
 
     // Если в приложение придёт уведомление, у которого поле action не соответствует ни
