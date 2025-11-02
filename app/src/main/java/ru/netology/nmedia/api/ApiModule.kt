@@ -41,7 +41,7 @@ class ApiModule {
                 val requestBuilder = chain.request().newBuilder()
 
                 if (!token.isNullOrBlank()) {
-                    requestBuilder.addHeader("Authorization", "Bearer $token")
+                    requestBuilder.addHeader("Authorization", token)
                 }
 
                 chain.proceed(requestBuilder.build())

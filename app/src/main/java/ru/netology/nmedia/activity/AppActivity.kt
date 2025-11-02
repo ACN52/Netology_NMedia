@@ -30,13 +30,13 @@ import javax.inject.Inject
 class AppActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var appAuth: AppAuth
+    lateinit var appAuth: AppAuth   // Внедряем через Hilt
 
     @Inject
-    lateinit var firebaseMessaging: FirebaseMessaging
+    lateinit var firebaseMessaging: FirebaseMessaging   // Внедряем через Hilt
 
     @Inject
-    lateinit var googleApiAvailability: GoogleApiAvailability
+    lateinit var googleApiAvailability: GoogleApiAvailability   // Внедряем через Hilt
 
     private val viewModel: AuthViewModel by viewModels(
 
@@ -121,7 +121,6 @@ class AppActivity : AppCompatActivity() {
     }
 
 
-
     // Функция на разрешения для отправки Уведомлений (Push-уведомления)
     private fun requestNotificationsPermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
@@ -138,7 +137,7 @@ class AppActivity : AppCompatActivity() {
 
     // Метод проверяет - Есть Google Service на моем устройстве
     private fun checkGoogleApiAvailability() {
-        with(GoogleApiAvailability.getInstance()) {
+        with(googleApiAvailability) {
             val code = isGooglePlayServicesAvailable(this@AppActivity)
             if (code == ConnectionResult.SUCCESS) {
                 return@with

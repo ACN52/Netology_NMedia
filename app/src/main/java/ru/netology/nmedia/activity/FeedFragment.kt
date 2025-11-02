@@ -120,6 +120,7 @@ class FeedFragment : Fragment() {
         // Swipe экрана
         binding.swipeRefresh.setOnRefreshListener {
             viewModel.refreshPosts()
+            binding.swipeRefresh.isRefreshing = false 
         }
 
         // ДОБАВЛЯЕМ НАБЛЮДЕНИЕ ЗА ОШИБКАМИ ДЛЯ TOAST
