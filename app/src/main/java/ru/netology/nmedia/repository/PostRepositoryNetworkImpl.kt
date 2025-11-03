@@ -4,10 +4,13 @@ package ru.netology.nmedia.repository
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import javax.inject.Inject
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import ru.netology.nmedia.api.PostsApiService
 import ru.netology.nmedia.dto.Post
@@ -16,14 +19,29 @@ import ru.netology.nmedia.entity.PostEntity
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import kotlin.collections.map
 
 class PostRepositoryNetworkImpl @Inject constructor(
     private val dao: PostDao,
     private val apiService: PostsApiService
 ) : PostRepository {
 
+    private val refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    override  val data = Pager(
+        config = PagingConfig(pageSize = 10, enablePlaceholders = false),
+        pagingSourceFactory = {
+            PostPagingSource(apiService, dao, refreshTrigger)
+        }
+    ).flow
+
+    // Метод для принудительного обновления
+    override suspend fun refresh() {
+        refreshTrigger.emit(Unit)
+    }
+
     // Используем только видимые посты для основного списка
-    override val data = dao.getAllVisible().map { it.map { it.toDto() } }
+    //override val data = dao.getAllVisible().map { it.map { it.toDto() } }
 
     // override val data = dao.getAll().map {it.map {it.toDto() }}
 
@@ -41,13 +59,23 @@ class PostRepositoryNetworkImpl @Inject constructor(
     override suspend fun getAllAsync() {
         try {
             Log.d("Network", "Выполнение вызова API для получения сообщений")
-            val posts = apiService.getAll() // вызов API
-            Log.d("Network", "Получено ${posts.size} сообщений с сервера")
-            // Сохраняем посты как видимые при первоначальной загрузке
-            dao.insert(posts.map { post ->
-                PostEntity.fromDto(post).copy(isVisible = true)
-            })
-            _errorMessage.postValue(null)
+            val response = apiService.getAll() // получаем Response
+
+            if (response.isSuccessful) {
+                val posts = response.body() ?: emptyList()
+                Log.d("Network", "Получено ${posts.size} сообщений с сервера")
+
+                // Сохраняем посты как видимые при первоначальной загрузке
+                dao.insert(posts.map { post ->
+                    PostEntity.fromDto(post).copy(isVisible = true)
+                })
+                _errorMessage.postValue(null)
+            } else {
+                // Обработка HTTP ошибок
+                val errorMessage = "HTTP error: ${response.code()} - ${response.message()}"
+                Log.e("Network", errorMessage)
+                _errorMessage.postValue(errorMessage)
+            }
         } catch (e: Exception) {
             Log.e("Network", "Ошибка при получении постов: ${e.message}")
             handleNetworkError(e, "getAllAsync")

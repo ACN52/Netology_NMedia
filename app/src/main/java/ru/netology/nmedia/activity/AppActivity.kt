@@ -98,20 +98,22 @@ class AppActivity : AppCompatActivity() {
                         findNavController(R.id.nav_host_fragment).navigate(
                             R.id.action_to_auth_fragment
                         )
-                        appAuth.setAuth(5, "x-token")
+                        //appAuth.setAuth(5, "x-token")
                         true
                     }
 
                     R.id.signup -> {
-                        // TODO: just hardcode it, implementation must be in homework
-                        appAuth.setAuth(5, "x-token")
+                        viewModel.authenticate("login", "pass")
                         true
+//                        appAuth.setAuth(5, "x-token")
+//                        true
                     }
 
                     R.id.signout -> {
-                        // TODO: just hardcode it, implementation must be in homework
-                        appAuth.removeAuth()
+                        viewModel.logout() // используем метод из ViewModel
                         true
+//                        appAuth.removeAuth()
+//                        true
                     }
 
                     else -> false

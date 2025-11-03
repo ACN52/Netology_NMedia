@@ -12,12 +12,14 @@ import kotlinx.coroutines.launch
 import ru.netology.nmedia.api.AuthApiService
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.auth.AuthState
+import ru.netology.nmedia.repository.PostRepository
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
 
     private val appAuth: AppAuth,
-    private val authApiService: AuthApiService
+    private val authApiService: AuthApiService,
+    private val postRepository: PostRepository
 ) : ViewModel() {
 
     // Для наблюдения за состоянием авторизации в приложении
@@ -42,6 +44,10 @@ class AuthViewModel @Inject constructor(
                 if (response.isSuccessful && response.body() != null) {
                     val authData = response.body()!!
                     appAuth.setAuth(authData.id, authData.token)
+
+                    // Триггерим обновление данных постов
+                    postRepository.refresh()
+
                     _authProcessState.value = AuthProcessState.Success(authData)
                 } else {
                     _authProcessState.value = AuthProcessState.Error("Authentication failed: ${response.code()}")
@@ -49,6 +55,14 @@ class AuthViewModel @Inject constructor(
             } catch (e: Exception) {
                 _authProcessState.value = AuthProcessState.Error(e.message ?: "Unknown error")
             }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            appAuth.removeAuth()
+            // Триггерим обновление данных постов
+            postRepository.refresh()
         }
     }
 

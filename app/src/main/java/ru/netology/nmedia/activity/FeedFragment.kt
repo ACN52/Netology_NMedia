@@ -10,8 +10,15 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.paging.LoadState
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import ru.netology.nmedia.R
 import ru.netology.nmedia.adapter.OnInteractorListener
 import ru.netology.nmedia.adapter.PostAdapter
@@ -81,27 +88,38 @@ class FeedFragment : Fragment() {
         binding.recyclerId.adapter = adapter
 
         // Наблюдаем за данными и обновляем UI
-        viewModel.data.observe(viewLifecycleOwner) { state ->
-            adapter.submitList(state.posts)
-            binding.emptyText.isVisible = state.empty
+        lifecycleScope.launch {
+            viewModel.data
+                .flowWithLifecycle(lifecycle, Lifecycle.State.CREATED)
+                .collectLatest {
+                    adapter.submitData(it)
+                }
         }
 
-        viewModel.data.observe(viewLifecycleOwner) { state ->
-            binding.progress.isVisible = state.loading
-            binding.errorGroup.isVisible = state.error
+        lifecycleScope.launch {
+            adapter.loadStateFlow
+                .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+                .collectLatest { loadState ->
+                    val isLoading = loadState.refresh is LoadState.Loading ||
+                            loadState.append is LoadState.Loading ||
+                            loadState.prepend is LoadState.Loading
+
+                    // Реальная логика обработки состояния загрузки
+                    //binding.progressBar.isVisible = isLoading
+                }
         }
 
         binding.retryButton.setOnClickListener {
-            viewModel.loadPosts()
+            adapter.refresh()
         }
 
         binding.buttonFab.setOnClickListener {
             findNavController().navigate(R.id.action_feedFragment_to_newPostFragment)
         }
 
-        viewModel.newerCount.observe(viewLifecycleOwner) { state ->
-            println(state)
-        }
+//        viewModel.newerCount.observe(viewLifecycleOwner) { state ->
+//            println(state)
+//        }
 
         // Наблюдаем за уведомлением о новых постах
         // ----------------------------------------
@@ -120,7 +138,7 @@ class FeedFragment : Fragment() {
         // Swipe экрана
         binding.swipeRefresh.setOnRefreshListener {
             viewModel.refreshPosts()
-            binding.swipeRefresh.isRefreshing = false 
+            binding.swipeRefresh.isRefreshing = false
         }
 
         // ДОБАВЛЯЕМ НАБЛЮДЕНИЕ ЗА ОШИБКАМИ ДЛЯ TOAST
