@@ -16,4 +16,8 @@
     <string name="empty_posts">Пустой пост</string>
     <string name="error_loading">Ошибка загрузки</string>
     <string name="retry_loading">Повторить загрузку</string>
+    <string name="new_posts_available">Новые посты</string>
+    <string name="sign_in">Войти</string>
+    <string name="sign_up">Регистрация</string>
+    <string name="sign_out">Выйти</string>
 </resources>
