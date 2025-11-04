@@ -90,10 +90,16 @@ dependencies {
     //implementation(libs.bundles.hilt)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+    // Paging
+    implementation(libs.paging.runtime)
+    implementation(libs.paging.common)
+
+    // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.room.paging)
     ksp(libs.room.compiler)
-    implementation(libs.paging.runtime)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -4,8 +4,11 @@ package ru.netology.nmedia.repository
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import javax.inject.Inject
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.delay
@@ -15,6 +18,8 @@ import kotlinx.coroutines.flow.flow
 import ru.netology.nmedia.api.PostsApiService
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.dao.PostDao
+import ru.netology.nmedia.dao.PostRemoteKeyDao
+import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.entity.PostEntity
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -22,18 +27,26 @@ import java.net.UnknownHostException
 import kotlin.collections.map
 
 class PostRepositoryNetworkImpl @Inject constructor(
+    private val apiService: PostsApiService,
     private val dao: PostDao,
-    private val apiService: PostsApiService
+    //private val refreshTrigger: Flow<Unit>,
+    private val postRemoteKeyDao: PostRemoteKeyDao,
+    private val appDb: AppDb
 ) : PostRepository {
 
     private val refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    override  val data = Pager(
-        config = PagingConfig(pageSize = 10, enablePlaceholders = false),
-        pagingSourceFactory = {
-            PostPagingSource(apiService, dao, refreshTrigger)
-        }
+    @OptIn(ExperimentalPagingApi::class)
+    override val data: Flow<PagingData<Post>> = Pager(
+        config = PagingConfig(
+            pageSize = 10,
+            enablePlaceholders = false,
+            prefetchDistance = 2   // Загружаем следующую страницу за 2 элемента до конца
+        ),
+        pagingSourceFactory = { dao.getPagingSource() },
+        remoteMediator = PostRemoteMediator(apiService, dao, refreshTrigger, postRemoteKeyDao, appDb)
     ).flow
+        .map { it.map(PostEntity::toDto) }
 
     // Метод для принудительного обновления
     override suspend fun refresh() {
@@ -66,7 +79,7 @@ class PostRepositoryNetworkImpl @Inject constructor(
                 Log.d("Network", "Получено ${posts.size} сообщений с сервера")
 
                 // Сохраняем посты как видимые при первоначальной загрузке
-                dao.insert(posts.map { post ->
+                dao.insertAll(posts.map { post ->
                     PostEntity.fromDto(post).copy(isVisible = true)
                 })
                 _errorMessage.postValue(null)
@@ -98,7 +111,7 @@ class PostRepositoryNetworkImpl @Inject constructor(
                         val newEntities = newPosts.map { post ->
                             PostEntity.fromDto(post).copy(isVisible = false)
                         }
-                        dao.insert(newEntities)
+                        dao.insertAll(newEntities)
                         emit(newPosts.size)
                     } else {
                         emit(0)
