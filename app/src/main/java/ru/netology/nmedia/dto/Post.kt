@@ -3,8 +3,12 @@ package ru.netology.nmedia.dto
 import com.google.gson.annotations.SerializedName
 import ru.netology.nmedia.enumeration.AttachmentType
 
+sealed interface FeedItem{
+    val id: Long
+}
+
 data class Post(
-    var id: Long,
+    override  var id: Long,
     val authorId: Long,
     val author: String,
     val content: String,
@@ -18,7 +22,12 @@ data class Post(
     val attachment: Attachment? = null,
     val ownedByMe: Boolean = false
     //val video: String
-)
+): FeedItem
+
+data class Ad(
+    override  val id: Long,
+    val image: String
+): FeedItem
 
 data class Attachment(
     val url: String,

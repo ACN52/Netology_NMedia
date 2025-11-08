@@ -39,6 +39,6 @@
     <string name="sign_out">sign_out</string>
     <string name="login" translatable="false">login</string>
     <string name="password" translatable="false">password</string>
-
+    <string name="reklama">reklama</string>
 
 </resources>

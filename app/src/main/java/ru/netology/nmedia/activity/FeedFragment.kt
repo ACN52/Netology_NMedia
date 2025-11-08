@@ -15,6 +15,7 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 import ru.netology.nmedia.R
 import ru.netology.nmedia.adapter.OnInteractorListener
 import ru.netology.nmedia.adapter.PostAdapter
+import ru.netology.nmedia.adapter.PostLoadingStateAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.utils.StringArg
@@ -30,19 +32,28 @@ import ru.netology.nmedia.viewmodel.PostViewModel
 @AndroidEntryPoint
 class FeedFragment : Fragment() {
 
-    private val viewModel: PostViewModel by activityViewModels(
-
-    )
+    private val viewModel: PostViewModel by activityViewModels()
+    private lateinit var binding: FragmentFeedBinding
+    private lateinit var adapter: PostAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val binding = FragmentFeedBinding.inflate(inflater, container, false)
+        binding = FragmentFeedBinding.inflate(inflater, container, false)
 
-        val adapter = PostAdapter(object : OnInteractorListener {
+        setupAdapter()
+        setupObservers()
+        setupSwipeRefresh()
+        setupFab()
+        setupNewPostsNotification()
 
+        return binding.root
+    }
+
+    private fun setupAdapter() {
+        adapter = PostAdapter(object : OnInteractorListener {
             override fun onEdit(post: Post) {
                 // TODO
             }
@@ -56,11 +67,10 @@ class FeedFragment : Fragment() {
             }
 
             override fun onLike(post: Post) {
-                // ВЫЗЫВАЕМ СООТВЕТСТВУЮЩИЙ МЕТОД В ЗАВИСИМОСТИ ОТ ТЕКУЩЕГО СОСТОЯНИЯ
                 if (post.likedByMe) {
-                    viewModel.unlikeById(post.id)   // Если уже лайкнуто - убираем лайк
+                    viewModel.unlikeById(post.id)
                 } else {
-                    viewModel.likeById(post.id)     // Если не лайкнуто - ставим лайк
+                    viewModel.likeById(post.id)
                 }
             }
 
@@ -74,9 +84,7 @@ class FeedFragment : Fragment() {
                     putExtra(Intent.EXTRA_TEXT, post.content)
                     type = "text/plain"
                 }
-
-                val shareIntent =
-                    Intent.createChooser(intent, getString(R.string.chooser_share_post))
+                val shareIntent = Intent.createChooser(intent, getString(R.string.chooser_share_post))
                 startActivity(shareIntent)
             }
 
@@ -85,9 +93,15 @@ class FeedFragment : Fragment() {
             }
         })
 
-        binding.recyclerId.adapter = adapter
+        // Настраиваем адаптер с заголовком и футером для PREPEND и APPEND
+        binding.recyclerId.adapter = adapter.withLoadStateHeaderAndFooter(
+            header = PostLoadingStateAdapter { adapter.retry() }, // ДЛЯ PREPEND
+            footer = PostLoadingStateAdapter { adapter.retry() }    // ДЛЯ APPEND
+        )
+    }
 
-        // Наблюдаем за данными и обновляем UI
+    private fun setupObservers() {
+        // Наблюдаем за данными
         lifecycleScope.launch {
             viewModel.data
                 .flowWithLifecycle(lifecycle, Lifecycle.State.CREATED)
@@ -96,66 +110,66 @@ class FeedFragment : Fragment() {
                 }
         }
 
+        // Наблюдаем за состояниями загрузки
         lifecycleScope.launch {
             adapter.loadStateFlow
                 .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
                 .collectLatest { loadState ->
-                    val isLoading = loadState.refresh is LoadState.Loading ||
-                            loadState.append is LoadState.Loading ||
-                            loadState.prepend is LoadState.Loading
-
-                    // Реальная логика обработки состояния загрузки
-                    //binding.progressBar.isVisible = isLoading
+                    handleLoadState(loadState)
                 }
         }
 
-        binding.retryButton.setOnClickListener {
-            adapter.refresh()
+        // Наблюдаем за ошибками
+        viewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
+            errorMessage?.let { message ->
+                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+                viewModel.clearError()
+            }
         }
+    }
 
+    private fun handleLoadState(loadState: CombinedLoadStates) {
+        // REFRESH состояние - показываем в SwipeRefreshLayout
+        binding.swipeRefresh.isRefreshing = loadState.refresh is LoadState.Loading
+
+        // Показываем/скрываем кнопку повтора при ошибке
+        binding.retryButton.isVisible = loadState.refresh is LoadState.Error
+
+        // Обработка ошибок
+        when (val refreshState = loadState.refresh) {
+            is LoadState.Error -> {
+                binding.retryButton.setOnClickListener { adapter.retry() }
+            }
+            else -> {
+                // Другие состояния
+            }
+        }
+    }
+
+    private fun setupSwipeRefresh() {
+        binding.swipeRefresh.setOnRefreshListener {
+            adapter.refresh() // Запускаем REFRESH через адаптер
+        }
+    }
+
+    private fun setupFab() {
         binding.buttonFab.setOnClickListener {
             findNavController().navigate(R.id.action_feedFragment_to_newPostFragment)
         }
+    }
 
-//        viewModel.newerCount.observe(viewLifecycleOwner) { state ->
-//            println(state)
-//        }
-
-        // Наблюдаем за уведомлением о новых постах
-        // ----------------------------------------
+    private fun setupNewPostsNotification() {
         viewModel.showNewPostsNotification.observe(viewLifecycleOwner) { showNotification ->
             binding.newPostsNotification.isVisible = showNotification
         }
 
-        // Обработка нажатия на плашку
         binding.newPostsNotification.setOnClickListener {
             viewModel.loadNewPosts()
-            // Плавный скролл к верху
             binding.recyclerId.smoothScrollToPosition(0)
         }
-        // ----------------------------------------
-
-        // Swipe экрана
-        binding.swipeRefresh.setOnRefreshListener {
-            viewModel.refreshPosts()
-            binding.swipeRefresh.isRefreshing = false
-        }
-
-        // ДОБАВЛЯЕМ НАБЛЮДЕНИЕ ЗА ОШИБКАМИ ДЛЯ TOAST
-        viewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
-            errorMessage?.let { message ->
-                // ПОКАЗЫВАЕМ TOAST ПРИ ОШИБКАХ СЕТИ
-                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
-                // Очищаем ошибку после показа
-                viewModel.clearError()
-            }
-        }
-
-        return binding.root
     }
 
     companion object {
         var Bundle.textArgs by StringArg
-
     }
 }
