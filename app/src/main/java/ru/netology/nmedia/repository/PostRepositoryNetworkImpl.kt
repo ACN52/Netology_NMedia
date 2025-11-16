@@ -34,29 +34,40 @@ import kotlin.random.Random
 
 class PostRepositoryNetworkImpl @Inject constructor(
     private val dao: PostDao,
-    private val apiService: PostsApiService
+    private val apiService: PostsApiService,
+    private val appDb: AppDb,
+    private val postRemoteKeyDao: PostRemoteKeyDao
 ) : PostRepository {
 
-    private val factory = InvalidatingPagingSourceFactory {
-        PostPagingSource(apiService, dao)
-    }
+    // Убираем refreshTrigger, так как RemoteMediator будет сам обрабатывать refresh
+    @OptIn(ExperimentalPagingApi::class)
+    override val data: Flow<PagingData<FeedItem>>
+        get() = Pager(
+            config = PagingConfig(
+                pageSize = 10,
+                enablePlaceholders = false,
+                prefetchDistance = 2
+            ),
+            pagingSourceFactory = { dao.getPagingSource() },
+            remoteMediator = PostRemoteMediator(
+                apiService = apiService,
+                dao = dao,
+                postRemoteKeyDao = postRemoteKeyDao,
+                appDb = appDb
+            )
+        ).flow
+            .map { pagingData -> pagingData.map { it.toDto() } }
+            .map { pagingData -> pagingData.map { it as FeedItem } }
 
-    private val pager = Pager(
-        config = PagingConfig(pageSize = 10, enablePlaceholders = false),
-        pagingSourceFactory = factory,
-    )
-
-    override val data = pager.flow
-        .map { pagingData -> pagingData.map { it.toDto() } }
-        .map { pagingData -> pagingData.map { it as FeedItem } }
-
-    // LiveData для передачи ошибок в UI
+    // LiveData для ошибок
     private val _errorMessage = MutableLiveData<String?>()
     override val errorMessage: LiveData<String?> = _errorMessage
 
-    // Метод для принудительного обновления
+    // Refresh теперь будет инвалидировать PagingSource
     override suspend fun refresh() {
-        factory.invalidate()
+        // Инвалидация заставит Pager пересоздать PagingSource и RemoteMediator
+        // что вызовет refresh в RemoteMediator
+        dao.getPagingSource().invalidate()
     }
 
     override suspend fun getAllAsync() {

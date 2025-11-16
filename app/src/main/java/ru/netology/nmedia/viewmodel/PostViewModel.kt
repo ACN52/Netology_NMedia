@@ -66,7 +66,7 @@ class PostViewModel @Inject constructor(
         get() = _postCreated
 
     init {
-        loadPosts()
+        // loadPosts() Paging 3 загружает данные автоматически
     }
 
     // наблюдение за errorMessage

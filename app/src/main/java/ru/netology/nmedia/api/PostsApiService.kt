@@ -8,8 +8,8 @@ import ru.netology.nmedia.viewmodel.AuthData
 
 // Сервис для постов
 interface PostsApiService {
-    @GET("slow/posts")
-    suspend fun getAll(): Response<List<Post>>
+//    @GET("slow/posts")
+//    suspend fun getAll(): Response<List<Post>>
 
     @GET("slow/latest")
     suspend fun getLatest(@Query("count") count: Int): Response<List<Post>>

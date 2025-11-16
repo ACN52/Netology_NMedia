@@ -19,27 +19,19 @@ import ru.netology.nmedia.entity.PostRemoteKeyEntity
 class PostRemoteMediator(
     private val apiService: PostsApiService,
     private val dao: PostDao,
-    private val refreshTrigger: Flow<Unit>,
     private val postRemoteKeyDao: PostRemoteKeyDao,
     private val appDb: AppDb
 ): RemoteMediator<Int, PostEntity>() {
 
-    override suspend fun initialize(): InitializeAction {
-        return InitializeAction.SKIP_INITIAL_REFRESH
-    }
-
-    fun getRefreshKey(state: PagingState<Int, PostEntity>): Int? {
-        return state.anchorPosition?.let { anchorPosition ->
-            state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1)
-                ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(1)
-        }
-    }
+//    override suspend fun initialize(): InitializeAction {
+//        return InitializeAction.SKIP_INITIAL_REFRESH
+//    }
 
     override suspend fun load(loadType: LoadType, state: PagingState<Int, PostEntity>): MediatorResult {
         return try {
             when (loadType) {
                 LoadType.REFRESH -> handleRefresh(state)
-                LoadType.PREPEND -> handlePrepend() // Отключаем автоматический PREPEND
+                LoadType.PREPEND -> MediatorResult.Success(endOfPaginationReached = true) // PREPEND отключен
                 LoadType.APPEND -> handleAppend(state)
             }
         } catch (e: Exception) {
@@ -48,30 +40,9 @@ class PostRemoteMediator(
     }
 
     private suspend fun handleRefresh(state: PagingState<Int, PostEntity>): MediatorResult {
-        // Обработка триггера обновления
-        var shouldRefresh = false
-        refreshTrigger
-            .take(1)
-            .collect {
-                shouldRefresh = true
-            }
-
-        if (!shouldRefresh) {
-            // Если нет сигнала обновления, используем кешированные данные
-            return MediatorResult.Success(endOfPaginationReached = false)
-        }
-
         return appDb.withTransaction {
-            // Получаем ID самого нового поста для инкрементального обновления
-            val latestPostId = dao.getLatestPostId()
-
-            val response = if (latestPostId != null) {
-                // Инкрементальное обновление - получаем только новые посты
-                apiService.getAfter(latestPostId, state.config.pageSize)
-            } else {
-                // Первая загрузка - получаем последние посты
-                apiService.getLatest(state.config.initialLoadSize)
-            }
+            // При refresh всегда получаем самые свежие данные
+            val response = apiService.getLatest(state.config.initialLoadSize)
 
             if (!response.isSuccessful) {
                 return@withTransaction MediatorResult.Error(Exception("HTTP error: ${response.code()}"))
@@ -79,15 +50,11 @@ class PostRemoteMediator(
 
             val body = response.body() ?: emptyList()
 
-            if (body.isEmpty()) {
-                return@withTransaction MediatorResult.Success(endOfPaginationReached = true)
-            }
+            if (body.isNotEmpty()) {
+                // Вставляем/обновляем посты (conflict strategy заменяет при конфликте)
+                dao.insertAll(body.map { PostEntity.fromDto(it).copy(isVisible = true) })
 
-            // Сохраняем новые посты в базу (не очищаем старые)
-            dao.insertAll(body.map { PostEntity.fromDto(it).copy(isVisible = true) })
-
-            // Обновляем ключи только если это первая загрузка
-            if (latestPostId == null) {
+                // Обновляем ключи для APPEND
                 postRemoteKeyDao.clear()
                 postRemoteKeyDao.insert(
                     PostRemoteKeyEntity(
@@ -97,13 +64,8 @@ class PostRemoteMediator(
                 )
             }
 
-            MediatorResult.Success(endOfPaginationReached = false)
+            MediatorResult.Success(endOfPaginationReached = body.isEmpty())
         }
-    }
-
-    private suspend fun handlePrepend(): MediatorResult {
-        // Отключаем автоматическую подгрузку при скролле к верху
-        return MediatorResult.Success(endOfPaginationReached = true)
     }
 
     private suspend fun handleAppend(state: PagingState<Int, PostEntity>): MediatorResult {
@@ -120,22 +82,17 @@ class PostRemoteMediator(
 
             val body = response.body() ?: emptyList()
 
-            if (body.isEmpty()) {
-                return@withTransaction MediatorResult.Success(endOfPaginationReached = true)
+            if (body.isNotEmpty()) {
+                dao.insertAll(body.map { PostEntity.fromDto(it).copy(isVisible = true) })
+                postRemoteKeyDao.insert(
+                    PostRemoteKeyEntity(
+                        type = PostRemoteKeyEntity.KeyType.BEFORE,
+                        key = body.last().id,
+                    )
+                )
             }
 
-            // Сохраняем посты в базу
-            dao.insertAll(body.map { PostEntity.fromDto(it).copy(isVisible = true) })
-
-            // Обновляем ключ для следующей загрузки
-            postRemoteKeyDao.insert(
-                PostRemoteKeyEntity(
-                    type = PostRemoteKeyEntity.KeyType.BEFORE,
-                    key = body.last().id,
-                )
-            )
-
-            MediatorResult.Success(endOfPaginationReached = false)
+            MediatorResult.Success(endOfPaginationReached = body.isEmpty())
         }
     }
 }
