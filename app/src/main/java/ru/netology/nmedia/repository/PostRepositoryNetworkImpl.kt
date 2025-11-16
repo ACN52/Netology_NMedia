@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.paging.ExperimentalPagingApi
+import androidx.paging.InvalidatingPagingSourceFactory
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -16,6 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
+import ru.netology.nmedia.activity.PostPagingSource
 import ru.netology.nmedia.api.PostsApiService
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.dao.PostDao
@@ -31,95 +33,45 @@ import kotlin.collections.map
 import kotlin.random.Random
 
 class PostRepositoryNetworkImpl @Inject constructor(
-    private val apiService: PostsApiService,
     private val dao: PostDao,
-    //private val refreshTrigger: Flow<Unit>,
-    private val postRemoteKeyDao: PostRemoteKeyDao,
-    private val appDb: AppDb
+    private val apiService: PostsApiService
 ) : PostRepository {
 
-    private val refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-
-    @OptIn(ExperimentalPagingApi::class)
-    override val data: Flow<PagingData<FeedItem>> = Pager(
-        config = PagingConfig(
-            pageSize = 10,
-            enablePlaceholders = false,
-            prefetchDistance = 2   // Загружаем следующую страницу за 2 элемента до конца
-        ),
-        pagingSourceFactory = { dao.getPagingSource() },
-        remoteMediator = PostRemoteMediator(apiService, dao, refreshTrigger, postRemoteKeyDao, appDb)
-    ).flow
-        .map { it.map(PostEntity::toDto)
-            .insertSeparators {previous, _ ->
-                if (previous?.id?.rem(5) ==0L) {
-                    Ad(Random.nextLong(), image = "figma.jpg")
-                } else {
-                    null
-                }
-            }
-        }
-
-    // Метод для принудительного обновления
-    override suspend fun refresh() {
-        refreshTrigger.emit(Unit)
+    private val factory = InvalidatingPagingSourceFactory {
+        PostPagingSource(apiService, dao)
     }
 
-    // Используем только видимые посты для основного списка
-    //override val data = dao.getAllVisible().map { it.map { it.toDto() } }
+    private val pager = Pager(
+        config = PagingConfig(pageSize = 10, enablePlaceholders = false),
+        pagingSourceFactory = factory,
+    )
 
-    // override val data = dao.getAll().map {it.map {it.toDto() }}
+    override val data = pager.flow
+        .map { pagingData -> pagingData.map { it.toDto() } }
+        .map { pagingData -> pagingData.map { it as FeedItem } }
 
     // LiveData для передачи ошибок в UI
     private val _errorMessage = MutableLiveData<String?>()
     override val errorMessage: LiveData<String?> = _errorMessage
 
-    private fun handleNetworkError(e: Exception, context: String) {
-        val message = getNetworkErrorMessage(e)
-        Log.e("PostRepositoryNetworkImpl", "Network error in $context: ${e.message}")
-        // Передаем сообщение для Toast
-        _errorMessage.postValue(message)
+    // Метод для принудительного обновления
+    override suspend fun refresh() {
+        factory.invalidate()
     }
 
     override suspend fun getAllAsync() {
-        try {
-            Log.d("Network", "Выполнение вызова API для получения сообщений")
-            val response = apiService.getAll() // получаем Response
-
-            if (response.isSuccessful) {
-                val posts = response.body() ?: emptyList()
-                Log.d("Network", "Получено ${posts.size} сообщений с сервера")
-
-                // Сохраняем посты как видимые при первоначальной загрузке
-                dao.insertAll(posts.map { post ->
-                    PostEntity.fromDto(post).copy(isVisible = true)
-                })
-                _errorMessage.postValue(null)
-            } else {
-                // Обработка HTTP ошибок
-                val errorMessage = "HTTP error: ${response.code()} - ${response.message()}"
-                Log.e("Network", errorMessage)
-                _errorMessage.postValue(errorMessage)
-            }
-        } catch (e: Exception) {
-            Log.e("Network", "Ошибка при получении постов: ${e.message}")
-            handleNetworkError(e, "getAllAsync")
-        }
+        // Для Paging 3 это не нужно, так как данные загружаются автоматически
     }
 
     override fun getNewerCount(id: Long): Flow<Int> = flow {
         while (true) {
             delay(10_000L)
             try {
-                // ИСПОЛЬЗУЕМ ОПТИМИЗИРОВАННЫЙ МЕТОД ДЛЯ ПОЛУЧЕНИЯ ТОЛЬКО НОВЫХ ПОСТОВ
                 val response = apiService.getNewer(id)
-
                 if (response.isSuccessful) {
                     val newPosts = response.body() ?: emptyList()
-
                     if (newPosts.isNotEmpty()) {
                         Log.d("Network", "Найдено ${newPosts.size} новых постов")
-                        // Сохраняем только новые посты как невидимые
                         val newEntities = newPosts.map { post ->
                             PostEntity.fromDto(post).copy(isVisible = false)
                         }
@@ -132,7 +84,6 @@ class PostRepositoryNetworkImpl @Inject constructor(
                     Log.e("Network", "Ошибка HTTP при получении новых постов: ${response.code()}")
                     emit(0)
                 }
-
                 _errorMessage.postValue(null)
             } catch (e: Exception) {
                 handleNetworkError(e, "getNewerCount")
@@ -145,12 +96,9 @@ class PostRepositoryNetworkImpl @Inject constructor(
         try {
             val updatedPost = apiService.likeById(id)
             dao.insert(PostEntity.fromDto(updatedPost))
-            _errorMessage.postValue(null) // Очищаем ошибку при успехе
+            _errorMessage.postValue(null)
         } catch (e: Exception) {
-            val message = getNetworkErrorMessage(e)
-            Log.e("PostRepositoryNetworkImpl", "Network error in likeById: ${e.message}")
-            // Данные остаются из БД - приложение работает
-            _errorMessage.postValue(message)
+            handleNetworkError(e, "likeById")
         }
     }
 
@@ -158,15 +106,11 @@ class PostRepositoryNetworkImpl @Inject constructor(
         try {
             val updatedPost = apiService.unlikeById(id)
             dao.insert(PostEntity.fromDto(updatedPost))
-            _errorMessage.postValue(null) // Очищаем ошибку при успехе
+            _errorMessage.postValue(null)
         } catch (e: Exception) {
-            val message = getNetworkErrorMessage(e)
-            Log.e("PostRepositoryNetworkImpl", "Network error in unlikeById: ${e.message}")
-            // Данные остаются из БД - приложение работает
-            _errorMessage.postValue(message)
+            handleNetworkError(e, "unlikeById")
         }
     }
-
 
     override suspend fun removeById(id: Long) {
         try {
@@ -174,9 +118,7 @@ class PostRepositoryNetworkImpl @Inject constructor(
             dao.removeById(id)
             _errorMessage.postValue(null)
         } catch (e: Exception) {
-            val message = getNetworkErrorMessage(e)
-            Log.e("PostRepositoryNetworkImpl", "Network error in removeById: ${e.message}")
-            _errorMessage.postValue(message)
+            handleNetworkError(e, "removeById")
         }
     }
 
@@ -198,7 +140,7 @@ class PostRepositoryNetworkImpl @Inject constructor(
         }
     }
 
-    override fun isEmpty()= dao.isEmpty()
+    override fun isEmpty() = dao.isEmpty()
 
     override fun clearError() {
         _errorMessage.postValue(null)
@@ -208,6 +150,11 @@ class PostRepositoryNetworkImpl @Inject constructor(
         dao.makeAllVisible()
     }
 
+    private fun handleNetworkError(e: Exception, context: String) {
+        val message = getNetworkErrorMessage(e)
+        Log.e("PostRepositoryNetworkImpl", "Network error in $context: ${e.message}")
+        _errorMessage.postValue(message)
+    }
 
     private fun getNetworkErrorMessage(t: Throwable): String {
         return when (t) {

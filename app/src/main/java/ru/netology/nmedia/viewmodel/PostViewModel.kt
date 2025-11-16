@@ -83,15 +83,8 @@ class PostViewModel @Inject constructor(
     val showNewPostsNotification: LiveData<Boolean> = _showNewPostsNotification
 
     fun loadPosts() {
-        viewModelScope.launch {
-            _state.value = FeedModelState(loading = true)
-            try {
-                repository.getAllAsync()
-                _state.value = FeedModelState()
-            } catch (_: Exception) {
-                _state.value = FeedModelState(error = true)
-            }
-        }
+        // Для Paging 3 данные загружаются автоматически
+        _state.value = FeedModelState()
     }
 
     fun loadNewPosts() {
@@ -110,7 +103,7 @@ class PostViewModel @Inject constructor(
     fun refreshPosts() = viewModelScope.launch {
         try {
             _state.value = FeedModelState(refreshing = true)
-            repository.getAllAsync()
+            repository.refresh() // Используем новый метод refresh
             _state.value = FeedModelState()
         } catch (e: Exception) {
             _state.value = FeedModelState(error = true)
