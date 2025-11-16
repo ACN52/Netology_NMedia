@@ -33,28 +33,28 @@ class PostCardFragment: Fragment() {
         val postId = arguments?.getLong("postId") ?: 0L
 
         // Наблюдаем изменения в списке постов
-        viewModel.data.observe(viewLifecycleOwner) { feedModel ->
-            // Достаем список постов из объекта FeedModel
-            val posts = feedModel.posts ?: emptyList()
-
-            // Используем find(), чтобы найти пост по указанному ID
-            val post = posts.find { it.id == postId }
-
-            if (post != null) {
-                with(binding) {
-                    textAuthor.text = post.author
-                    textContent.text = post.content
-                    textPublished.text = post.published
-
-                    imageHeart.apply {
-                        isChecked = post.likedByMe
-                        text = formatNumberShort(post.likesCount)
-                    }
-                    imageShare.text = formatNumberShort(post.sharesCount)
-                    imageLook.text = formatNumberShort(post.looksCount)
-                }
-            }
-        }
+//        viewModel.data.observe(viewLifecycleOwner) { feedModel ->
+//            // Достаем список постов из объекта FeedModel
+//            val posts = feedModel.posts ?: emptyList()
+//
+//            // Используем find(), чтобы найти пост по указанному ID
+//            val post = posts.find { it.id == postId }
+//
+//            if (post != null) {
+//                with(binding) {
+//                    textAuthor.text = post.author
+//                    textContent.text = post.content
+//                    textPublished.text = post.published
+//
+//                    imageHeart.apply {
+//                        isChecked = post.likedByMe
+//                        text = formatNumberShort(post.likesCount)
+//                    }
+//                    imageShare.text = formatNumberShort(post.sharesCount)
+//                    imageLook.text = formatNumberShort(post.looksCount)
+//                }
+//            }
+//        }
         return binding.root
     }
 }
