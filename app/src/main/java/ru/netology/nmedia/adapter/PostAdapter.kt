@@ -1,21 +1,27 @@
 package ru.netology.nmedia.adapter
 
-import android.content.Intent
-import android.net.Uri
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.formatNumberShort
+import ru.netology.nmedia.view.loadCircleCrop
+import ru.netology.nmedia.BuildConfig
+import ru.netology.nmedia.databinding.CardAdBinding
+import ru.netology.nmedia.dto.Ad
+import ru.netology.nmedia.dto.FeedItem
+import ru.netology.nmedia.view.load
+
 
 interface OnInteractorListener {
     fun onLike(post: Post)
+    //fun onDisLike(post: Post)
     fun onShare(post: Post)
     fun onView(post: Post)
     fun onRemove(post: Post)
@@ -26,18 +32,48 @@ interface OnInteractorListener {
 
 class PostAdapter(
     private val onInteractorListener: OnInteractorListener
-) : ListAdapter<Post, PostViewHolder>(PostDiffCallBack) {
+) : PagingDataAdapter<FeedItem, RecyclerView.ViewHolder>(PostDiffCallBack) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
-        val binding = CardPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return PostViewHolder(binding, onInteractorListener)
+    override fun getItemViewType(position: Int): Int {
+        return when (getItem(position)) {
+            is Ad -> R.layout.card_ad
+            is Post -> R.layout.card_post
+            null -> error("unknown item type")
+        }
     }
 
-    override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
-        val post = getItem(position)
-        holder.bind(post)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
+        when (viewType) {
+            R.layout.card_post -> {
+                val binding = CardPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                PostViewHolder(binding, onInteractorListener)
+            }
+            R.layout.card_ad -> {
+                val binding = CardAdBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                AdViewHolder(binding)
+            }
+            else -> error("unknown view type: $viewType")
+        }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+         when (val item = getItem(position)) {
+             is Post -> (holder as? PostViewHolder)?.bind(item)
+             is Ad -> (holder as? AdViewHolder)?.bind(item)
+             null -> error("unknown item type")
+         }
     }
 }
+
+// Для Рекламы
+class AdViewHolder(
+    private val binding: CardAdBinding
+): RecyclerView.ViewHolder(binding.root) {
+    fun bind(ad: Ad) {
+        // Загружаем Рекламу
+        binding.image.load("${BuildConfig.BASE_URL}/media/${ad.image}")
+    }
+}
+
 
 class PostViewHolder(
     private val binding: CardPostBinding,
@@ -49,6 +85,9 @@ class PostViewHolder(
         textPublished.text = post.published
         //textVideo.text = post.video
 
+        // Загружаем аватарки
+        iconNetology.loadCircleCrop("${BuildConfig.BASE_URL}/avatars/${post.authorAvatar}")
+
         // Обновление UI на основе текущего состояния
         imageHeart.apply {
             isChecked = post.likedByMe
@@ -58,6 +97,8 @@ class PostViewHolder(
         imageHeart.text = formatNumberShort(post.likesCount)
         imageShare.text = formatNumberShort(post.sharesCount)
         imageLook.text = formatNumberShort(post.looksCount)
+
+        iconMenu.visibility = if (post.ownedByMe) View.VISIBLE else View.INVISIBLE
 
         // Обработчики кликов
         // ==================
@@ -70,7 +111,8 @@ class PostViewHolder(
         }
 
         imageLook.setOnClickListener {
-            onInteractorListener.onView(post)  // Вызываем колбэк просмотра поста
+            onInteractorListener.onView(post) // Вызываем колбэк просмотра поста
+
         }
 
         iconMenu.setOnClickListener {
@@ -113,12 +155,15 @@ class PostViewHolder(
     }
 }
 
-object PostDiffCallBack: DiffUtil.ItemCallback<Post>(){
-    override fun areItemsTheSame(oldItem: Post, newItem: Post): Boolean {
+object PostDiffCallBack: DiffUtil.ItemCallback<FeedItem>(){
+    override fun areItemsTheSame(oldItem: FeedItem, newItem: FeedItem): Boolean {
+        if (oldItem::class != newItem::class) {
+            return false
+        }
         return oldItem.id == newItem.id
     }
 
-    override fun areContentsTheSame(oldItem: Post, newItem: Post): Boolean {
+    override fun areContentsTheSame(oldItem: FeedItem, newItem: FeedItem): Boolean {
         return oldItem == newItem
     }
 }
